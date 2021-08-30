@@ -55,10 +55,11 @@ func main() {
 		"connecting to the database",
 	)
 
-	postgresDB := database.NewDatabase(
-		config.Database.Name, config.Database.User, config.Database.Password,
+	database := database.NewDatabase(
+		config.Database.Name, config.Database.Host, config.Database.Port, config.Database.User, config.Database.Password,
 	)
-	defer postgresDB.Close()
+
+	defer database.Close()
 
 	// operator := operator.NewOperator(
 	// 	config, postgresDB,

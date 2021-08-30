@@ -8,7 +8,7 @@ import (
 type Database struct {
 	Name     string `yaml:"name" required:"true" env:"DATABASE_NAME"`
 	Host     string `yaml:"host" required:"true" env:"DATABASE_HOST"`
-	Port     int    `yaml:"port" required:"true" env:"DATABASE_PORT"`
+	Port     string `yaml:"port" required:"true" env:"DATABASE_PORT"`
 	User     string `yaml:"user" required:"true"`
 	Password string `yaml:"password" required:"true"`
 }
