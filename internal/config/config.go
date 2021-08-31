@@ -13,8 +13,20 @@ type Database struct {
 	Password string `yaml:"password" required:"true"`
 }
 
+type Telegram struct {
+	Token string `yaml:"token" required:"true" env:"TELEGRAM_TOKEN"`
+}
+
+type BetApi struct {
+	Token                 string `yaml:"token" required:"true"`
+	BaseUrlUpcomingEvents string `yaml:"base_url_upcoming_events" required:"true"`
+	// BASE_URL_GET_EVENT_ODDS_BY_ID string `yaml:"base_url_get_event_odds_by_id" required:"true"`
+}
+
 type Config struct {
 	Database Database `yaml:"database" required:"true"`
+	Telegram Telegram `yaml:"telegram" required:"true"`
+	BetApi   BetApi   `yaml:"bet_api" required:"true"`
 }
 
 func Load(path string) (*Config, error) {

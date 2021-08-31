@@ -2,7 +2,8 @@ package main
 
 import (
 	"github.com/daniilsolovey/BetBotGo/internal/config"
-	"github.com/daniilsolovey/BetBotGo/internal/database"
+	"github.com/daniilsolovey/BetBotGo/internal/operator"
+	"github.com/daniilsolovey/BetBotGo/internal/requester"
 	"github.com/docopt/docopt-go"
 	"github.com/reconquest/karma-go"
 	"github.com/reconquest/pkg/log"
@@ -55,14 +56,17 @@ func main() {
 		"connecting to the database",
 	)
 
-	database := database.NewDatabase(
-		config.Database.Name, config.Database.Host, config.Database.Port, config.Database.User, config.Database.Password,
+	// database := database.NewDatabase(
+	// 	config.Database.Name, config.Database.Host, config.Database.Port, config.Database.User, config.Database.Password,
+	// )
+	// defer database.Close()
+
+
+	requester := requester.NewRequester(config)
+
+	operator := operator.NewOperator(
+		config, nil, requester,
 	)
 
-	defer database.Close()
-
-	// operator := operator.NewOperator(
-	// 	config, postgresDB,
-	// )
-
+	operator.HandleRequests()
 }
