@@ -1,0 +1,14 @@
+bet_api:
+    token: ""
+    base_url_upcoming_events: "https://api.b365api.com/v2/events/upcoming?sport_id=91&&token=" # + bet_api.token
+    base_url_get_event_odds_by_id: "https://api.b365api.com/v2/event/odds?token=" # + bet_api.token + "&event_id="
+
+telegram:
+    token: ""
+
+database:
+    name: "bet_bot_go"
+    host: "localhost"
+    port: "5432"
+    user: "postgres"
+    password: "admin"

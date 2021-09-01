@@ -18,9 +18,9 @@ type Telegram struct {
 }
 
 type BetApi struct {
-	Token                 string `yaml:"token" required:"true"`
-	BaseUrlUpcomingEvents string `yaml:"base_url_upcoming_events" required:"true"`
-	// BASE_URL_GET_EVENT_ODDS_BY_ID string `yaml:"base_url_get_event_odds_by_id" required:"true"`
+	Token                   string `yaml:"token" required:"true"`
+	BaseUrlUpcomingEvents   string `yaml:"base_url_upcoming_events" required:"true"`
+	BaseUrlGetEventOddsById string `yaml:"base_url_get_event_odds_by_id" required:"true"`
 }
 
 type Config struct {

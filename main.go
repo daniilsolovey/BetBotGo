@@ -1,6 +1,9 @@
 package main
 
 import (
+	"sync"
+	"time"
+
 	"github.com/daniilsolovey/BetBotGo/internal/config"
 	"github.com/daniilsolovey/BetBotGo/internal/operator"
 	"github.com/daniilsolovey/BetBotGo/internal/requester"
@@ -51,22 +54,32 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Infof(
-		karma.Describe("database", config.Database.Name),
-		"connecting to the database",
-	)
-
+	// log.Infof(
+	// 	karma.Describe("database", config.Database.Name),
+	// 	"connecting to the database",
+	// )
 	// database := database.NewDatabase(
 	// 	config.Database.Name, config.Database.Host, config.Database.Port, config.Database.User, config.Database.Password,
 	// )
 	// defer database.Close()
-
-
 	requester := requester.NewRequester(config)
-
 	operator := operator.NewOperator(
 		config, nil, requester,
 	)
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
 
-	operator.HandleRequests()
+		log.Info("start cycle with receiving events for today")
+		for {
+			events, err := operator.GetEventsForToday()
+			if err != nil {
+				log.Error(err)
+			}
+
+			log.Warning("events ", events)
+			time.Sleep(1 * time.Hour)
+		}
+	}()
+	wg.Wait()
 }
