@@ -111,6 +111,48 @@ func (requester *Requester) GetEventOddsByEventIDs(events *UpcomingEvents) ([]Ev
 	return result, nil
 }
 
+func (requester *Requester) GetLiveEventByID(eventID string) (*EventWithOdds, error) {
+	log.Info("receiving event odds in live match by event id")
+	baseURL := requester.config.BetApi.BaseUrlGetEventOddsById + requester.config.BetApi.Token +
+		BASE_URL_EVENT_ID
+
+	url := baseURL + eventID
+	log.Infof(
+		karma.Describe("event_id", eventID).Describe("url", url),
+		"receiving odds for event in live match",
+	)
+
+	request, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, karma.Format(
+			err,
+			"unable to get request by url: %s", url,
+		)
+	}
+
+	client := &http.Client{}
+	response, err := client.Do(request)
+	if err != nil {
+		return nil, karma.Format(
+			err,
+			"unable to send http request by url: %s", url,
+		)
+	}
+
+	defer response.Body.Close()
+	var eventWithOdds EventWithOdds
+	err = json.NewDecoder(response.Body).Decode(&eventWithOdds)
+	if err != nil {
+		return nil, karma.Format(
+			err,
+			"unable to decode response, response status code: %d ",
+			response.StatusCode,
+		)
+	}
+
+	return &eventWithOdds, nil
+}
+
 // bodyBytes, err := ioutil.ReadAll(response.Body)
 // if err != nil {
 // 	log.Fatal(err)

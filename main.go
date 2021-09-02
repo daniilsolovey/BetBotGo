@@ -91,6 +91,11 @@ func main() {
 				log.Error(err)
 			}
 
+			err = operator.CreateRoutinesForEachEvent(events)
+			if err != nil {
+				log.Error(err)
+			}
+
 			time.Sleep(1 * time.Hour)
 		}
 	}()

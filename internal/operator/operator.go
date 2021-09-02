@@ -1,9 +1,13 @@
 package operator
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/daniilsolovey/BetBotGo/internal/config"
 	"github.com/daniilsolovey/BetBotGo/internal/database"
 	"github.com/daniilsolovey/BetBotGo/internal/requester"
+	"github.com/daniilsolovey/BetBotGo/internal/tools"
 	"github.com/reconquest/karma-go"
 	"github.com/reconquest/pkg/log"
 )
@@ -65,23 +69,63 @@ func (operator *Operator) GetEventsForToday() ([]requester.EventWithOdds, error)
 	return sortedEventsWithOdds, nil
 }
 
-func (operator *Operator) HandleLiveEvents([]requester.EventWithOdds) error {
+func (operator *Operator) EventRotuneGetLiveOdds(event *requester.EventWithOdds) error {
+	timeNow, err := tools.GetCurrentMoscowTime()
+	if err != nil {
+		return karma.Format(
+			err,
+			"unable to get moscow time",
+		)
+	}
+
+	diff := event.HumanTime.Sub(timeNow)
+	time.Sleep(diff)
+	errCount := 0
+	liveEventResult := false
+	for {
+		liveEvent, err := operator.requester.GetLiveEventByID(event.EventID)
+		if err != nil {
+			if errCount < 3 {
+				log.Errorf(err, "unable to get live event data by event_id: %s", event.EventID)
+				errCount = 1
+				time.Sleep(10 * time.Second)
+			} else {
+				break
+			}
+		}
+
+		liveEventResult, err := handleLiveEventOdds(liveEvent)
+		if err != nil {
+			if errCount < 3 {
+				log.Errorf(err, "unable to handle live event event_id: %s", liveEvent.EventID)
+				errCount = 1
+				time.Sleep(10 * time.Second)
+			} else {
+				break
+			}
+			if liveEventResult {
+				break
+			}
+			time.Sleep(1 * time.Second)
+		}
+	}
+
+	if liveEventResult {
+		fmt.Println("sent to bot")
+		// send message to telegram bot
+	}
 	return nil
+
 }
 
-// def scan_live_event(self):
-// print("in worker func")
-// current_time = datetime.datetime.now()
-// self_primary_odds = self.event['results']['odds'].get('91_1')
-// print("self_primary_odds",self_primary_odds)
-// event_add_time = datetime.datetime.fromtimestamp(
-// 	int(self_primary_odds[0]['add_time']))
-// response_json = self.requester.get_event_data_by_id(
-// 	str(self.url), str(self.event_id))
-// primary_odds = response_json['results']['odds'].get('91_1')
-// play_set = primary_odds[0]['ss']
-// winner = get_winner_of_first_set_of_game(play_set)
-// if winner != self.favorite and \
-// 	get_number_of_set(play_set) == 2 and \
-// 		float(primary_odds[0][self.favorite]) > 1.5:
-// 	return response_json
+func (operator *Operator) CreateRoutinesForEachEvent([]requester.EventWithOdds) error {
+	// timeNow, err := tools.GetCurrentMoscowTime()
+	// if err != nil {
+	// 	return nil, karma.Format(
+	// 		err,
+	// 		"unable to get moscow time",
+	// 	)
+	// }
+
+	return nil
+}
