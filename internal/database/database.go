@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/daniilsolovey/BetBotGo/internal/requester"
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -60,15 +61,7 @@ func (database *Database) connect() (*pgxpool.Pool, error) {
 }
 
 func (database *Database) Close() error {
-
 	database.client.Close()
-	// if err != nil {
-	// 	return karma.Format(
-	// 		err,
-	// 		"unable to close connection to the database",
-	// 	)
-	// }
-
 	return nil
 }
 
@@ -89,7 +82,6 @@ func (database *Database) CreateTables() error {
 	}
 
 	return nil
-
 }
 
 func (database *Database) InsertEventsForToday(events []requester.EventWithOdds) error {
@@ -125,6 +117,10 @@ func (database *Database) InsertEventsForToday(events []requester.EventWithOdds)
 					errRollback,
 					"unable to rollback transaction",
 				)
+			}
+
+			if strings.Contains(err.Error(), "ERROR: duplicate key value violates unique constraint") {
+				continue
 			}
 
 			return karma.Format(

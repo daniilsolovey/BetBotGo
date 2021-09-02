@@ -64,7 +64,6 @@ func (requester *Requester) GetEventOddsByEventIDs(events *UpcomingEvents) ([]Ev
 	baseURL := requester.config.BetApi.BaseUrlGetEventOddsById + requester.config.BetApi.Token +
 		BASE_URL_EVENT_ID
 
-	log.Warning("baseUrl ", baseURL)
 	var result []EventWithOdds
 	for _, event := range events.Results {
 		url := baseURL + event.ID

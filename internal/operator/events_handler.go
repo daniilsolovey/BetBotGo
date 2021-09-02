@@ -7,7 +7,6 @@ import (
 	"github.com/daniilsolovey/BetBotGo/internal/constants"
 	"github.com/daniilsolovey/BetBotGo/internal/requester"
 	"github.com/reconquest/karma-go"
-	"github.com/reconquest/pkg/log"
 )
 
 func getUpcomingEventsForToday(upcomingEvents *requester.UpcomingEvents) (*requester.UpcomingEvents, error) {
@@ -32,7 +31,6 @@ func getUpcomingEventsForToday(upcomingEvents *requester.UpcomingEvents) (*reque
 		}
 
 		convertedTime := time.Unix(parsedTime, 0).In(moscowTime)
-		log.Warning("convertedTime ", convertedTime)
 		if convertedTime.After(timeNow) &&
 			convertedTime.Before(timeNow.Truncate(24*time.Hour).Add(21*time.Hour)) {
 			event.HumanTime = convertedTime
