@@ -1,8 +1,6 @@
 package operator
 
 import (
-	"fmt"
-
 	"github.com/daniilsolovey/BetBotGo/internal/config"
 	"github.com/daniilsolovey/BetBotGo/internal/database"
 	"github.com/daniilsolovey/BetBotGo/internal/requester"
@@ -47,7 +45,6 @@ func (operator *Operator) GetEventsForToday() ([]requester.EventWithOdds, error)
 	}
 
 	log.Info("upcoming events for today received successfully")
-	fmt.Println("upcomingEvents", upcomingEventsForToday)
 
 	eventsWithOdds, err := operator.requester.GetEventOddsByEventIDs(upcomingEventsForToday)
 	if err != nil {
@@ -56,7 +53,6 @@ func (operator *Operator) GetEventsForToday() ([]requester.EventWithOdds, error)
 			"unable to get upcoming events",
 		)
 	}
-	fmt.Println("eventsWithOdds", eventsWithOdds)
 
 	sortedEventsWithOdds, err := sortEventsByOdds(eventsWithOdds)
 	if err != nil {
@@ -65,10 +61,6 @@ func (operator *Operator) GetEventsForToday() ([]requester.EventWithOdds, error)
 			"unable to sort events by odds",
 		)
 	}
-
-	fmt.Println("sortedEvents", sortedEventsWithOdds)
-	fmt.Println("len(eventsWithOdds)", len(eventsWithOdds))
-	fmt.Println("len(sortedEvents)", len(sortedEventsWithOdds))
 
 	return sortedEventsWithOdds, nil
 }

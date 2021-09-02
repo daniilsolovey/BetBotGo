@@ -27,9 +27,7 @@ func NewRequester(
 
 func (requester *Requester) GetUpcomingEventsOnCurrentDate() (*UpcomingEvents, error) {
 	log.Info("receiving upcoming events")
-
 	url := requester.config.BetApi.BaseUrlUpcomingEvents + requester.config.BetApi.Token
-	log.Warning("url ", url)
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, karma.Format(
@@ -63,7 +61,6 @@ func (requester *Requester) GetUpcomingEventsOnCurrentDate() (*UpcomingEvents, e
 
 func (requester *Requester) GetEventOddsByEventIDs(events *UpcomingEvents) ([]EventWithOdds, error) {
 	log.Info("receiving event odds by event ids")
-
 	baseURL := requester.config.BetApi.BaseUrlGetEventOddsById + requester.config.BetApi.Token +
 		BASE_URL_EVENT_ID
 
@@ -76,7 +73,6 @@ func (requester *Requester) GetEventOddsByEventIDs(events *UpcomingEvents) ([]Ev
 			"receiving odds for event",
 		)
 
-		log.Warning("request before ")
 		request, err := http.NewRequest("GET", url, nil)
 		if err != nil {
 			return nil, karma.Format(
@@ -84,7 +80,6 @@ func (requester *Requester) GetEventOddsByEventIDs(events *UpcomingEvents) ([]Ev
 				"unable to get request by url: %s", url,
 			)
 		}
-		log.Warning("request after ")
 
 		client := &http.Client{}
 		response, err := client.Do(request)
@@ -94,14 +89,10 @@ func (requester *Requester) GetEventOddsByEventIDs(events *UpcomingEvents) ([]Ev
 				"unable to send http request by url: %s", url,
 			)
 		}
-		log.Warning("request after 2 ")
 
 		// defer response.Body.Close()
-
 		var eventWithOdds EventWithOdds
 		err = json.NewDecoder(response.Body).Decode(&eventWithOdds)
-		log.Warning("request after 222222 ")
-		log.Warning("err ", err)
 		if err != nil {
 			return nil, karma.Format(
 				err,
@@ -112,14 +103,9 @@ func (requester *Requester) GetEventOddsByEventIDs(events *UpcomingEvents) ([]Ev
 
 		eventWithOdds.League = event.League
 		eventWithOdds.HumanTime = event.HumanTime
-		log.Warning("eventWithOdds.HumanTime ", eventWithOdds.HumanTime)
-		log.Warning("result after 3 ")
 
 		result = append(result, eventWithOdds)
-		log.Warning("result after 4 ")
-
 		response.Body.Close()
-
 	}
 
 	return result, nil

@@ -73,6 +73,7 @@ func sortEventsByOdds(eventsWithOdds []requester.EventWithOdds) ([]requester.Eve
 			} else {
 				event.Favorite = constants.FAVORITE_IS_AWAY
 			}
+
 			result = append(result, event)
 		}
 	}

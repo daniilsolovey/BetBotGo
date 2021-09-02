@@ -77,7 +77,8 @@ func main() {
 				log.Error(err)
 			}
 
-			log.Warning("events ", events)
+			log.Warning("events result2222!!!!", events)
+			log.Warning("len(events)", len(events))
 			time.Sleep(1 * time.Hour)
 		}
 	}()
