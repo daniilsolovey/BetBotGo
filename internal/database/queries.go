@@ -2,11 +2,12 @@ package database
 
 const (
 	SQL_CREATE_TABLE_UPCOMING_EVENTS = `
-	CREATE TABLE IF NOT EXISTS events_volleyball (
-		id INT NOT NULL PRIMARY KEY,
-		event_id INT,
+CREATE TABLE IF NOT EXISTS
+	events_volleyball(
+		id SERIAL NOT NULL PRIMARY KEY,
+		event_id VARCHAR(50),
 		event_time TIMESTAMP,
-		league_id INT,
+		league_id VARCHAR(50),
 		league_name VARCHAR(50),
 		favorite_name VARCHAR(50),
 		odd_home DECIMAL,
@@ -24,7 +25,7 @@ INSERT INTO
 		odd_home,
 		odd_away
 	)
-VALUES(?, ?, ?, ?, ?, ?, ?);
+	VALUES($1, $2, $3, $4, $5, $6, $7);
 `
 )
 

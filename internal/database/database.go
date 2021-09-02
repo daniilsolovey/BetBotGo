@@ -5,7 +5,8 @@ import (
 	"fmt"
 
 	"github.com/daniilsolovey/BetBotGo/internal/requester"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/pgxpool"
+
 	"github.com/reconquest/karma-go"
 	"github.com/reconquest/pkg/log"
 )
@@ -20,7 +21,7 @@ type Database struct {
 	port     string
 	user     string
 	password string
-	client   *pgx.Conn
+	client   *pgxpool.Pool
 }
 
 func NewDatabase(
@@ -43,10 +44,10 @@ func NewDatabase(
 	return database
 }
 
-func (database *Database) connect() (*pgx.Conn, error) {
+func (database *Database) connect() (*pgxpool.Pool, error) {
 	databaseUrl := fmt.Sprintf("postgres://%s:%s@%s:%s/%s", database.user, database.password, database.host, database.port, database.name)
-	connection, err := pgx.Connect(context.Background(), databaseUrl)
-
+	// connection, err := pgx.Connect(context.Background(), databaseUrl)
+	connection, err := pgxpool.Connect(context.Background(), databaseUrl)
 	if err != nil {
 		return nil, karma.Format(
 			err,
@@ -59,13 +60,14 @@ func (database *Database) connect() (*pgx.Conn, error) {
 }
 
 func (database *Database) Close() error {
-	err := database.client.Close(context.Background())
-	if err != nil {
-		return karma.Format(
-			err,
-			"unable to close connection to the database",
-		)
-	}
+
+	database.client.Close()
+	// if err != nil {
+	// 	return karma.Format(
+	// 		err,
+	// 		"unable to close connection to the database",
+	// 	)
+	// }
 
 	return nil
 }

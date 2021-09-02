@@ -21,6 +21,7 @@ require (
 	github.com/jackc/pgproto3/v2 v2.1.1 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20200714003250-2b9c44734f2b // indirect
 	github.com/jackc/pgtype v1.8.1 // indirect
+	github.com/jackc/puddle v1.1.3 // indirect
 	github.com/kovetskiy/lorg v0.0.0-20200107130803-9a7136a95634 // indirect
 	github.com/kovetskiy/toml v0.2.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
