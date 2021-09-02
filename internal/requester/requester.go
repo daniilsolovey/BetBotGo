@@ -103,6 +103,7 @@ func (requester *Requester) GetEventOddsByEventIDs(events *UpcomingEvents) ([]Ev
 
 		eventWithOdds.League = event.League
 		eventWithOdds.HumanTime = event.HumanTime
+		eventWithOdds.EventID = event.ID
 
 		result = append(result, eventWithOdds)
 		response.Body.Close()

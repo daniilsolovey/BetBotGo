@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/daniilsolovey/BetBotGo/internal/config"
+	"github.com/daniilsolovey/BetBotGo/internal/database"
 	"github.com/daniilsolovey/BetBotGo/internal/operator"
 	"github.com/daniilsolovey/BetBotGo/internal/requester"
 	"github.com/docopt/docopt-go"
@@ -54,14 +55,20 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// log.Infof(
-	// 	karma.Describe("database", config.Database.Name),
-	// 	"connecting to the database",
-	// )
-	// database := database.NewDatabase(
-	// 	config.Database.Name, config.Database.Host, config.Database.Port, config.Database.User, config.Database.Password,
-	// )
-	// defer database.Close()
+	log.Infof(
+		karma.Describe("database", config.Database.Name),
+		"connecting to the database",
+	)
+
+	database := database.NewDatabase(
+		config.Database.Name, config.Database.Host, config.Database.Port, config.Database.User, config.Database.Password,
+	)
+	err = database.CreateTables()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer database.Close()
 	requester := requester.NewRequester(config)
 	operator := operator.NewOperator(
 		config, nil, requester,
@@ -79,6 +86,11 @@ func main() {
 
 			log.Warning("events result2222!!!!", events)
 			log.Warning("len(events)", len(events))
+			err = database.InsertEventsForToday(events)
+			if err != nil {
+				log.Error(err)
+			}
+
 			time.Sleep(1 * time.Hour)
 		}
 	}()

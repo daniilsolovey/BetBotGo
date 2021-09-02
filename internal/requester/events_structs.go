@@ -35,6 +35,7 @@ type Away struct {
 }
 
 type EventWithOdds struct {
+	EventID             string
 	ResultEventWithOdds ResultEventWithOdds `json:"results"`
 	League              struct {
 		ID   string `json:"id"`
@@ -44,6 +45,8 @@ type EventWithOdds struct {
 
 	HumanTime time.Time
 	Favorite  string
+	HomeOdd   float64
+	AwayOdd   float64
 }
 
 type ResultEventWithOdds struct {

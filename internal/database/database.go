@@ -3,10 +3,11 @@ package database
 import (
 	"context"
 	"fmt"
-	"log"
 
+	"github.com/daniilsolovey/BetBotGo/internal/requester"
 	"github.com/jackc/pgx/v4"
 	"github.com/reconquest/karma-go"
+	"github.com/reconquest/pkg/log"
 )
 
 const (
@@ -45,6 +46,7 @@ func NewDatabase(
 func (database *Database) connect() (*pgx.Conn, error) {
 	databaseUrl := fmt.Sprintf("postgres://%s:%s@%s:%s/%s", database.user, database.password, database.host, database.port, database.name)
 	connection, err := pgx.Connect(context.Background(), databaseUrl)
+
 	if err != nil {
 		return nil, karma.Format(
 			err,
@@ -68,23 +70,78 @@ func (database *Database) Close() error {
 	return nil
 }
 
-func (database *Database) QueryRow() error {
-	// err := database.client.QueryRow()
-	// if err != nil {
-	// 	return karma.Format(
-	// 		err,
-	// 		"unable to close connection to the database",
-	// 	)
-	// }
+func (database *Database) CreateTables() error {
+	log.Infof(
+		karma.Describe("database", database.name),
+		"create tables in database",
+	)
+
+	_, err := database.client.Query(
+		context.Background(),
+		SQL_CREATE_TABLE_UPCOMING_EVENTS)
+	if err != nil {
+		return karma.Format(
+			err,
+			"unable to create upcoming_events table in the database",
+		)
+	}
 
 	return nil
+
 }
 
-// defer conn.Close(context.Background())
-// var name string
-// var weight int64
-// err = conn.QueryRow(context.Background(), "select name, weight from widgets where id=$1", 42).Scan(&name, &weight)
-// if err != nil {
-// 	fmt.Fprintf(os.Stderr, "QueryRow failed: %v\n", err)
-// 	os.Exit(1)
-// }
+func (database *Database) InsertEventsForToday(events []requester.EventWithOdds) error {
+	log.Infof(
+		karma.Describe("database", database.name),
+		"inserting events in database",
+	)
+
+	transaction, err := database.client.Begin(context.Background())
+	if err != nil {
+		return karma.Format(
+			err,
+			"unable to start a sql transaction",
+		)
+	}
+
+	for _, event := range events {
+		_, err = transaction.Exec(
+			context.Background(),
+			SQL_INSERT_EVENTS_FOR_TODAY,
+			event.EventID,
+			event.HumanTime,
+			event.League.ID,
+			event.League.Name,
+			event.Favorite,
+			event.HomeOdd,
+			event.AwayOdd,
+		)
+		if err != nil {
+			errRollback := transaction.Rollback(context.Background())
+			if errRollback != nil {
+				return karma.Format(
+					errRollback,
+					"unable to rollback transaction",
+				)
+			}
+
+			return karma.Format(
+				err,
+				"unable to add event to the database,"+
+					" event: %v",
+				event,
+			)
+		}
+	}
+
+	err = transaction.Commit(context.Background())
+	if err != nil {
+		return karma.Format(
+			err,
+			"unable to commit transaction for adding events",
+		)
+	}
+
+	log.Info("events successfully added")
+	return nil
+}
