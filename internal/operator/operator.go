@@ -83,7 +83,7 @@ func (operator *Operator) HandleLiveOdds(event *requester.EventWithOdds) error {
 
 	diff := event.HumanTime.Sub(timeNow)
 	time.Sleep(diff)
-	liveEventResult := operator.getWinner(event)
+	liveEventResult := operator.createLoopForGetWinner(event)
 	if liveEventResult {
 		fmt.Println("sent to bot")
 		// send message to telegram bot
@@ -91,10 +91,24 @@ func (operator *Operator) HandleLiveOdds(event *requester.EventWithOdds) error {
 	return nil
 }
 
-func (operator *Operator) getWinner(event *requester.EventWithOdds) bool {
-	errCount := 0
-	liveEventResult := false
-	// for {
+func (operator *Operator) createLoopForGetWinner(event *requester.EventWithOdds) bool {
+	for {
+		liveEventResult := operator.getWinner(event, 0)
+		switch liveEventResult {
+		case "finished with error":
+			return false
+		case "numberOfSet=3":
+			return false
+		case "true":
+			return true
+		case "":
+			time.Sleep(1 * time.Second)
+			continue
+		}
+	}
+}
+
+func (operator *Operator) getWinner(event *requester.EventWithOdds, errCount int) string {
 	liveEvent, err := operator.requester.GetLiveEventByID(event.EventID)
 	log.Warning("liveEvent ", liveEvent)
 	if err != nil {
@@ -104,28 +118,29 @@ func (operator *Operator) getWinner(event *requester.EventWithOdds) bool {
 			time.Sleep(1 * time.Second)
 		} else {
 			// break
+			return "finished with error"
 		}
 	}
 
-	liveEventResult, err = handleLiveEventOdds(liveEvent)
+	liveEventResult, numberOfSet, err := handleLiveEventOdds(liveEvent)
 	if err != nil {
 		if errCount < 3 {
 			log.Errorf(err, "unable to handle live event event_id: %s", liveEvent.EventID)
 			errCount = 1
 			time.Sleep(1 * time.Second)
 		} else {
-			// break
-			return false
+			return "finished with error"
 		}
 	}
 	if liveEventResult {
-		// break
-		return liveEventResult
+		return "true"
 
 	}
-	time.Sleep(1 * time.Second)
-	// }
-	return liveEventResult
+	if numberOfSet == 3 {
+		return "numberOfSet=3"
+	}
+
+	return ""
 }
 
 func (operator *Operator) CreateRoutinesForEachEvent([]requester.EventWithOdds) error {

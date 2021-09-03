@@ -113,20 +113,20 @@ func convertStringToFloat(data string) (float64, error) {
 	return result, nil
 }
 
-func handleLiveEventOdds(event *requester.EventWithOdds) (bool, error) {
+func handleLiveEventOdds(event *requester.EventWithOdds) (bool, int, error) {
 	if len(event.ResultEventWithOdds.Odds.Odds91_1) == 0 {
-		return false, errors.New("len of sets is null")
+		return false, 0, errors.New("len of sets is null")
 	}
 
 	setData := event.ResultEventWithOdds.Odds.Odds91_1[0].SS
 	homeOdd, err := convertStringToFloat(event.ResultEventWithOdds.Odds.Odds91_1[0].HomeOd)
 	if err != nil {
-		return false, err
+		return false, 0, err
 	}
 
 	awayOdd, err := convertStringToFloat(event.ResultEventWithOdds.Odds.Odds91_1[0].HomeOd)
 	if err != nil {
-		return false, err
+		return false, 0, err
 	}
 
 	var mainOdd float64
@@ -140,14 +140,18 @@ func handleLiveEventOdds(event *requester.EventWithOdds) (bool, error) {
 	winner := getWinnerInFirstSet(setData)
 	log.Warning("winner ", winner)
 	if winner == "" {
-		return false, nil
+		return false, 0, nil
 	}
 
 	if event.Favorite != winner && getNumberOfSet(setData) == 2 && mainOdd > 1.5 {
-		return true, nil
+		return true, 0, nil
 	}
 
-	return false, nil
+	if getNumberOfSet(setData) == 3 {
+		return false, 3, nil
+	}
+
+	return false, 0, nil
 }
 
 func getWinnerInFirstSet(setData string) string {
