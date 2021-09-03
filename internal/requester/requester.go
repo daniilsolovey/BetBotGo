@@ -118,7 +118,6 @@ func (requester *Requester) GetEventOddsByEventIDs(events *UpcomingEvents) ([]Ev
 }
 
 func (requester *Requester) GetLiveEventByID(eventID string) (*EventWithOdds, error) {
-	log.Info("receiving event odds in live match by event id")
 	baseURL := requester.config.BetApi.BaseUrlGetEventOddsById + requester.config.BetApi.Token +
 		BASE_URL_EVENT_ID
 

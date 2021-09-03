@@ -178,6 +178,6 @@ func TestOperator_getWinner_ReturnWinnerResult(
 	// eventsWithOdds[1].ResultEventWithOdds.Odds.Odds91_1[0].SS = "17-25,25-21"
 	// eventsWithOdds[1].ResultEventWithOdds.Odds.Odds91_1[0].HomeOd = "1.67"
 	eventsWithOdds[1].Favorite = constants.FAVORITE_IS_HOME
-	result := operator.getWinner(&eventsWithOdds[1], 0)
+	result := operator.getWinner(eventsWithOdds[1], 0)
 	log.Warning("result ", result)
 }

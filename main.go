@@ -86,6 +86,8 @@ func main() {
 
 			log.Warning("events result!!!!", events)
 			log.Warning("len(events)", len(events))
+			log.Warning("events[0].EventID ", events[0].EventID)
+			log.Warning("events[1].EventID ", events[1].EventID)
 
 			err = database.InsertEventsForToday(events)
 			if err != nil {

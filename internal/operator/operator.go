@@ -72,7 +72,8 @@ func (operator *Operator) GetEvents() ([]requester.EventWithOdds, error) {
 	return sortedEventsWithOdds, nil
 }
 
-func (operator *Operator) HandleLiveOdds(event *requester.EventWithOdds) error {
+func (operator *Operator) RoutineHandleLiveOdds(event requester.EventWithOdds) error {
+	log.Infof(nil, "creating routine for event_id: %s", event.EventID)
 	timeNow, err := tools.GetCurrentMoscowTime()
 	if err != nil {
 		return karma.Format(
@@ -88,10 +89,12 @@ func (operator *Operator) HandleLiveOdds(event *requester.EventWithOdds) error {
 		fmt.Println("sent to bot")
 		// send message to telegram bot
 	}
+
+	log.Infof(nil, "routine successfully finished for event_id: %s", event.EventID)
 	return nil
 }
 
-func (operator *Operator) createLoopForGetWinner(event *requester.EventWithOdds) bool {
+func (operator *Operator) createLoopForGetWinner(event requester.EventWithOdds) bool {
 	for {
 		liveEventResult := operator.getWinner(event, 0)
 		switch liveEventResult {
@@ -108,7 +111,7 @@ func (operator *Operator) createLoopForGetWinner(event *requester.EventWithOdds)
 	}
 }
 
-func (operator *Operator) getWinner(event *requester.EventWithOdds, errCount int) string {
+func (operator *Operator) getWinner(event requester.EventWithOdds, errCount int) string {
 	liveEvent, err := operator.requester.GetLiveEventByID(event.EventID)
 	log.Warning("liveEvent ", liveEvent)
 	if err != nil {
@@ -143,14 +146,10 @@ func (operator *Operator) getWinner(event *requester.EventWithOdds, errCount int
 	return ""
 }
 
-func (operator *Operator) CreateRoutinesForEachEvent([]requester.EventWithOdds) error {
-	// timeNow, err := tools.GetCurrentMoscowTime()
-	// if err != nil {
-	// 	return nil, karma.Format(
-	// 		err,
-	// 		"unable to get moscow time",
-	// 	)
-	// }
+func (operator *Operator) CreateRoutinesForEachEvent(events []requester.EventWithOdds) error {
+	for _, event := range events {
+		go operator.RoutineHandleLiveOdds(event)
+	}
 
 	return nil
 }
