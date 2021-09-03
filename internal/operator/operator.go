@@ -15,13 +15,13 @@ import (
 type Operator struct {
 	config    *config.Config
 	database  *database.Database
-	requester *requester.Requester
+	requester requester.RequesterInterface
 }
 
 func NewOperator(
 	config *config.Config,
 	database *database.Database,
-	requester *requester.Requester,
+	requester requester.RequesterInterface,
 ) *Operator {
 	return &Operator{
 		config:    config,
@@ -30,8 +30,8 @@ func NewOperator(
 	}
 }
 
-func (operator *Operator) GetEventsForToday() ([]requester.EventWithOdds, error) {
-	upcomingEvents, err := operator.requester.GetUpcomingEventsOnCurrentDate()
+func (operator *Operator) GetEvents() ([]requester.EventWithOdds, error) {
+	upcomingEvents, err := operator.requester.GetUpcomingEvents()
 	if err != nil {
 		return nil, karma.Format(
 			err,
@@ -39,6 +39,9 @@ func (operator *Operator) GetEventsForToday() ([]requester.EventWithOdds, error)
 		)
 	}
 	log.Info("handle upcoming events and receiving events for today")
+	if upcomingEvents == nil {
+		return nil, nil
+	}
 
 	upcomingEventsForToday, err := getUpcomingEventsForToday(upcomingEvents)
 	if err != nil {
@@ -69,7 +72,7 @@ func (operator *Operator) GetEventsForToday() ([]requester.EventWithOdds, error)
 	return sortedEventsWithOdds, nil
 }
 
-func (operator *Operator) EventRotuneGetLiveOdds(event *requester.EventWithOdds) error {
+func (operator *Operator) HandleLiveOdds(event *requester.EventWithOdds) error {
 	timeNow, err := tools.GetCurrentMoscowTime()
 	if err != nil {
 		return karma.Format(
@@ -80,42 +83,49 @@ func (operator *Operator) EventRotuneGetLiveOdds(event *requester.EventWithOdds)
 
 	diff := event.HumanTime.Sub(timeNow)
 	time.Sleep(diff)
-	errCount := 0
-	liveEventResult := false
-	for {
-		liveEvent, err := operator.requester.GetLiveEventByID(event.EventID)
-		if err != nil {
-			if errCount < 3 {
-				log.Errorf(err, "unable to get live event data by event_id: %s", event.EventID)
-				errCount = 1
-				time.Sleep(10 * time.Second)
-			} else {
-				break
-			}
-		}
-
-		liveEventResult, err := handleLiveEventOdds(liveEvent)
-		if err != nil {
-			if errCount < 3 {
-				log.Errorf(err, "unable to handle live event event_id: %s", liveEvent.EventID)
-				errCount = 1
-				time.Sleep(10 * time.Second)
-			} else {
-				break
-			}
-			if liveEventResult {
-				break
-			}
-			time.Sleep(1 * time.Second)
-		}
-	}
-
+	liveEventResult := operator.getWinner(event)
 	if liveEventResult {
 		fmt.Println("sent to bot")
 		// send message to telegram bot
 	}
 	return nil
+}
 
+func (operator *Operator) getWinner(event *requester.EventWithOdds) bool {
+	errCount := 0
+	liveEventResult := false
+	// for {
+	liveEvent, err := operator.requester.GetLiveEventByID(event.EventID)
+	log.Warning("liveEvent ", liveEvent)
+	if err != nil {
+		if errCount < 3 {
+			log.Errorf(err, "unable to get live event data by event_id: %s", event.EventID)
+			errCount = 1
+			time.Sleep(1 * time.Second)
+		} else {
+			// break
+		}
+	}
+
+	liveEventResult, err = handleLiveEventOdds(liveEvent)
+	if err != nil {
+		if errCount < 3 {
+			log.Errorf(err, "unable to handle live event event_id: %s", liveEvent.EventID)
+			errCount = 1
+			time.Sleep(1 * time.Second)
+		} else {
+			// break
+			return false
+		}
+	}
+	if liveEventResult {
+		// break
+		return liveEventResult
+
+	}
+	time.Sleep(1 * time.Second)
+	// }
+	return liveEventResult
 }
 
 func (operator *Operator) CreateRoutinesForEachEvent([]requester.EventWithOdds) error {

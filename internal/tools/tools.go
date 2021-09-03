@@ -6,6 +6,8 @@ import (
 	"github.com/reconquest/karma-go"
 )
 
+var TimeNow = time.Now
+
 func GetCurrentMoscowTime() (time.Time, error) {
 	moscowTime, err := GetTimeMoscowLocation()
 	if err != nil {
@@ -15,7 +17,8 @@ func GetCurrentMoscowTime() (time.Time, error) {
 		)
 	}
 
-	return time.Now().In(moscowTime), nil
+	return TimeNow().In(moscowTime), nil
+
 }
 
 func GetTimeMoscowLocation() (*time.Location, error) {

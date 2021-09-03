@@ -13,6 +13,12 @@ const (
 	BASE_URL_EVENT_ID = "&event_id="
 )
 
+type RequesterInterface interface {
+	GetUpcomingEvents() (*UpcomingEvents, error)
+	GetEventOddsByEventIDs(*UpcomingEvents) ([]EventWithOdds, error)
+	GetLiveEventByID(string) (*EventWithOdds, error)
+}
+
 type Requester struct {
 	config *config.Config
 }
@@ -25,7 +31,7 @@ func NewRequester(
 	}
 }
 
-func (requester *Requester) GetUpcomingEventsOnCurrentDate() (*UpcomingEvents, error) {
+func (requester *Requester) GetUpcomingEvents() (*UpcomingEvents, error) {
 	log.Info("receiving upcoming events")
 	url := requester.config.BetApi.BaseUrlUpcomingEvents + requester.config.BetApi.Token
 	request, err := http.NewRequest("GET", url, nil)

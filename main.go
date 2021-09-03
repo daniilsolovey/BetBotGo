@@ -71,7 +71,7 @@ func main() {
 	defer database.Close()
 	requester := requester.NewRequester(config)
 	operator := operator.NewOperator(
-		config, nil, requester,
+		config, database, requester,
 	)
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -79,7 +79,7 @@ func main() {
 
 		log.Info("start cycle with receiving events for today")
 		for {
-			events, err := operator.GetEventsForToday()
+			events, err := operator.GetEvents()
 			if err != nil {
 				log.Error(err)
 			}

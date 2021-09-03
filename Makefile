@@ -6,7 +6,7 @@ VERSION = $(shell printf "%s.%s" \
 )
 
 # could be "..."
-TARGET =
+TARGET = ...
 
 GOFLAGS = GO111MODULE=on CGO_ENABLED=0
 

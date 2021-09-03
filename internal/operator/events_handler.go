@@ -10,6 +10,7 @@ import (
 	"github.com/daniilsolovey/BetBotGo/internal/requester"
 	"github.com/daniilsolovey/BetBotGo/internal/tools"
 	"github.com/reconquest/karma-go"
+	"github.com/reconquest/pkg/log"
 )
 
 func getUpcomingEventsForToday(upcomingEvents *requester.UpcomingEvents) (*requester.UpcomingEvents, error) {
@@ -137,6 +138,7 @@ func handleLiveEventOdds(event *requester.EventWithOdds) (bool, error) {
 	}
 
 	winner := getWinnerInFirstSet(setData)
+	log.Warning("winner ", winner)
 	if winner == "" {
 		return false, nil
 	}
@@ -151,6 +153,8 @@ func handleLiveEventOdds(event *requester.EventWithOdds) (bool, error) {
 func getWinnerInFirstSet(setData string) string {
 	liveSetScore := getLiveSetScore(setData)
 	numberOfSet := getNumberOfSet(setData)
+	log.Warning("numberOfSet ", numberOfSet)
+
 	if numberOfSet == 2 {
 		return getWinner(liveSetScore)
 	}
