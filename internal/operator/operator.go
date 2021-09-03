@@ -147,8 +147,18 @@ func (operator *Operator) getWinner(event requester.EventWithOdds, errCount int)
 }
 
 func (operator *Operator) CreateRoutinesForEachEvent(events []requester.EventWithOdds) error {
+	timeNow, err := tools.GetCurrentMoscowTime()
+	if err != nil {
+		return karma.Format(
+			err,
+			"unable to get moscow time for check that event ready to start in go-routine",
+		)
+	}
+
 	for _, event := range events {
-		go operator.RoutineHandleLiveOdds(event)
+		if event.HumanTime.After(timeNow) {
+			go operator.RoutineHandleLiveOdds(event)
+		}
 	}
 
 	return nil

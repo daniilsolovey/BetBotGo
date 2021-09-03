@@ -74,6 +74,14 @@ func sortEventsByOdds(eventsWithOdds []requester.EventWithOdds) ([]requester.Eve
 	for _, event := range eventsWithOdds {
 		primaryOdds = event.ResultEventWithOdds.Odds.Odds91_1
 		if len(primaryOdds) != 0 {
+			if primaryOdds[0].HomeOd == "-" {
+				primaryOdds[0].HomeOd = "0000"
+			}
+
+			if primaryOdds[0].AwayOd == "-" {
+				primaryOdds[0].AwayOd = "0000"
+			}
+
 			homeOdd, err = convertStringToFloat(primaryOdds[0].HomeOd)
 			if err != nil {
 				return nil, err

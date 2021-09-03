@@ -8,6 +8,7 @@ import (
 	"github.com/daniilsolovey/BetBotGo/internal/database"
 	"github.com/daniilsolovey/BetBotGo/internal/operator"
 	"github.com/daniilsolovey/BetBotGo/internal/requester"
+	"github.com/daniilsolovey/BetBotGo/internal/tools"
 	"github.com/docopt/docopt-go"
 	"github.com/reconquest/karma-go"
 	"github.com/reconquest/pkg/log"
@@ -76,7 +77,6 @@ func main() {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
-
 		log.Info("start cycle with receiving events for today")
 		for {
 			events, err := newOperator.GetEvents()
@@ -86,8 +86,6 @@ func main() {
 
 			log.Warning("events result!!!!", events)
 			log.Warning("len(events)", len(events))
-			log.Warning("events[0].EventID ", events[0].EventID)
-			log.Warning("events[1].EventID ", events[1].EventID)
 
 			err = database.InsertEventsForToday(events)
 			if err != nil {
@@ -99,7 +97,13 @@ func main() {
 				log.Error(err)
 			}
 
-			time.Sleep(1 * time.Hour)
+			timeNow, err := tools.GetCurrentMoscowTime()
+			if err != nil {
+				log.Error(err)
+			}
+
+			diff := timeNow.Truncate(24 * time.Hour).Add(21 * time.Hour).Add(1 * time.Second).Sub(timeNow)
+			time.Sleep(diff)
 		}
 	}()
 	wg.Wait()
