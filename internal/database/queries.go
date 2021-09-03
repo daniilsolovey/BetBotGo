@@ -4,7 +4,7 @@ const (
 	SQL_CREATE_TABLE_UPCOMING_EVENTS = `
 CREATE TABLE IF NOT EXISTS
 	events_volleyball(
-		event_id VARCHAR(50) NOT NULL PRIMARY KEY,
+		event_id VARCHAR(50) UNIQUE NOT NULL PRIMARY KEY,
 		event_time TIMESTAMP,
 		league_id VARCHAR(50),
 		league_name VARCHAR(50),

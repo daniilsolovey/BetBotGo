@@ -90,16 +90,8 @@ func (database *Database) InsertEventsForToday(events []requester.EventWithOdds)
 		"inserting events in database",
 	)
 
-	transaction, err := database.client.Begin(context.Background())
-	if err != nil {
-		return karma.Format(
-			err,
-			"unable to start a sql transaction",
-		)
-	}
-
 	for _, event := range events {
-		_, err = transaction.Exec(
+		_, err := database.client.Query(
 			context.Background(),
 			SQL_INSERT_EVENTS_FOR_TODAY,
 			event.EventID,
@@ -111,14 +103,6 @@ func (database *Database) InsertEventsForToday(events []requester.EventWithOdds)
 			event.AwayOdd,
 		)
 		if err != nil {
-			errRollback := transaction.Rollback(context.Background())
-			if errRollback != nil {
-				return karma.Format(
-					errRollback,
-					"unable to rollback transaction",
-				)
-			}
-
 			if strings.Contains(err.Error(), "ERROR: duplicate key value violates unique constraint") {
 				continue
 			}
@@ -126,20 +110,72 @@ func (database *Database) InsertEventsForToday(events []requester.EventWithOdds)
 			return karma.Format(
 				err,
 				"unable to add event to the database,"+
-					" event: %v",
-				event,
+					" event: %v, event_id: %s",
+				event, event.EventID,
 			)
 		}
-	}
-
-	err = transaction.Commit(context.Background())
-	if err != nil {
-		return karma.Format(
-			err,
-			"unable to commit transaction for adding events",
-		)
 	}
 
 	log.Info("events successfully added")
 	return nil
 }
+
+// func (database *Database) InsertEventsForToday(events []requester.EventWithOdds) error {
+// 	log.Infof(
+// 		karma.Describe("database", database.name),
+// 		"inserting events in database",
+// 	)
+
+// 	transaction, err := database.client.Begin(context.Background())
+// 	if err != nil {
+// 		return karma.Format(
+// 			err,
+// 			"unable to start a sql transaction",
+// 		)
+// 	}
+
+// 	for _, event := range events {
+// 		_, err = transaction.Exec(
+// 			context.Background(),
+// 			SQL_INSERT_EVENTS_FOR_TODAY,
+// 			event.EventID,
+// 			event.HumanTime,
+// 			event.League.ID,
+// 			event.League.Name,
+// 			event.Favorite,
+// 			event.HomeOdd,
+// 			event.AwayOdd,
+// 		)
+// 		if err != nil {
+// 			errRollback := transaction.Rollback(context.Background())
+// 			if errRollback != nil {
+// 				return karma.Format(
+// 					errRollback,
+// 					"unable to rollback transaction!",
+// 				)
+// 			}
+
+// 			if strings.Contains(err.Error(), "ERROR: duplicate key value violates unique constraint") {
+// 				continue
+// 			}
+
+// 			return karma.Format(
+// 				err,
+// 				"unable to add event to the database,"+
+// 					" event: %v, event_id: %s",
+// 				event, event.EventID,
+// 			)
+// 		}
+// 	}
+
+// 	err = transaction.Commit(context.Background())
+// 	if err != nil {
+// 		return karma.Format(
+// 			err,
+// 			"unable to commit transaction for adding events",
+// 		)
+// 	}
+
+// 	log.Info("events successfully added")
+// 	return nil
+// }

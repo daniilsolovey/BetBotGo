@@ -70,7 +70,7 @@ func main() {
 
 	defer database.Close()
 	requester := requester.NewRequester(config)
-	operator := operator.NewOperator(
+	newOperator := operator.NewOperator(
 		config, database, requester,
 	)
 	var wg sync.WaitGroup
@@ -79,19 +79,20 @@ func main() {
 
 		log.Info("start cycle with receiving events for today")
 		for {
-			events, err := operator.GetEvents()
+			events, err := newOperator.GetEvents()
 			if err != nil {
 				log.Error(err)
 			}
 
-			log.Warning("events result2222!!!!", events)
+			log.Warning("events result!!!!", events)
 			log.Warning("len(events)", len(events))
+
 			err = database.InsertEventsForToday(events)
 			if err != nil {
 				log.Error(err)
 			}
 
-			err = operator.CreateRoutinesForEachEvent(events)
+			err = newOperator.CreateRoutinesForEachEvent(events)
 			if err != nil {
 				log.Error(err)
 			}
