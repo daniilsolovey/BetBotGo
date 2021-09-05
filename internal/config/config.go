@@ -14,7 +14,8 @@ type Database struct {
 }
 
 type Telegram struct {
-	Token string `yaml:"token" required:"true" env:"TELEGRAM_TOKEN"`
+	Token            string `yaml:"token" required:"true" env:"TELEGRAM_TOKEN"`
+	ChannelRecipient int    `yaml:"channel_recepient" required:"true" env:"CHANNEL_RECEPIENT"`
 }
 
 type BetApi struct {

@@ -103,9 +103,6 @@ func main() {
 				log.Error(err)
 			}
 
-			log.Warning("events result!!!!", events)
-			log.Warning("len(events)", len(events))
-
 			err = database.InsertEventsForToday(events)
 			if err != nil {
 				log.Error(err)
@@ -128,11 +125,9 @@ func main() {
 
 	wg.Add(2)
 	go func() {
-
 		telegramBot.Handle("/start", newOperator.Start)
 		log.Infof(nil, "starting to listen and serve telegram bot")
 		bot.Start()
-
 	}()
 
 	wg.Wait()

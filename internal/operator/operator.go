@@ -90,11 +90,33 @@ func (operator *Operator) RoutineHandleLiveOdds(event requester.EventWithOdds) e
 	time.Sleep(diff)
 	liveEventResult := operator.createLoopForGetWinner(event)
 	if liveEventResult {
-		fmt.Println("sent to bot")
+		log.Info("sent to bot")
+		err := operator.SendMessageAboutWinnerToTelegram(event)
+		if err != nil {
+			log.Error(err)
+		}
 		// send message to telegram bot
 	}
 
 	log.Infof(nil, "routine successfully finished for event_id: %s", event.EventID)
+	return nil
+}
+
+func (operator *Operator) SendMessageAboutWinnerToTelegram(event requester.EventWithOdds) error {
+	text := fmt.Sprintf(
+		TEXT_ABOUT_WINNER,
+		event.EventID,
+		event.League.Name,
+		event.ResultEventWithOdds.Odds.Odds91_1[0].HomeOd,
+		event.ResultEventWithOdds.Odds.Odds91_1[0].AwayOd,
+		event.Favorite,
+	)
+
+	err := operator.transport.SendMessage(TEMP_RECIPIENT, text)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -116,12 +138,12 @@ func (operator *Operator) createLoopForGetWinner(event requester.EventWithOdds) 
 }
 
 func (operator *Operator) getWinner(event requester.EventWithOdds, errCount int) string {
+	log.Infof(nil, "handle live odds for event: %v", event)
 	liveEvent, err := operator.requester.GetLiveEventByID(event.EventID)
-	log.Warning("liveEvent ", liveEvent)
 	if err != nil {
-		if errCount < 3 {
+		if errCount < 5 {
 			log.Errorf(err, "unable to get live event data by event_id: %s", event.EventID)
-			errCount = 1
+			errCount = +1
 			time.Sleep(1 * time.Second)
 		} else {
 			// break
@@ -131,18 +153,20 @@ func (operator *Operator) getWinner(event requester.EventWithOdds, errCount int)
 
 	liveEventResult, numberOfSet, err := handleLiveEventOdds(liveEvent)
 	if err != nil {
-		if errCount < 3 {
+		if errCount < 5 {
 			log.Errorf(err, "unable to handle live event event_id: %s", liveEvent.EventID)
-			errCount = 1
+			errCount = +1
 			time.Sleep(1 * time.Second)
 		} else {
 			return "finished with error"
 		}
 	}
+
 	if liveEventResult {
 		return "true"
 
 	}
+
 	if numberOfSet == 3 {
 		return "numberOfSet=3"
 	}
