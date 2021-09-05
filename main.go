@@ -4,11 +4,14 @@ import (
 	"sync"
 	"time"
 
+	tb "gopkg.in/tucnak/telebot.v2"
+
 	"github.com/daniilsolovey/BetBotGo/internal/config"
 	"github.com/daniilsolovey/BetBotGo/internal/database"
 	"github.com/daniilsolovey/BetBotGo/internal/operator"
 	"github.com/daniilsolovey/BetBotGo/internal/requester"
 	"github.com/daniilsolovey/BetBotGo/internal/tools"
+	"github.com/daniilsolovey/BetBotGo/internal/transport"
 	"github.com/docopt/docopt-go"
 	"github.com/reconquest/karma-go"
 	"github.com/reconquest/pkg/log"
@@ -71,9 +74,25 @@ func main() {
 
 	defer database.Close()
 	requester := requester.NewRequester(config)
-	newOperator := operator.NewOperator(
-		config, database, requester,
+
+	log.Info("creating telegram bot")
+	bot, err := tb.NewBot(
+		tb.Settings{
+			Token:  config.Telegram.Token,
+			Poller: &tb.LongPoller{Timeout: 10 * time.Second},
+		},
 	)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	telegramBot := transport.NewBot(bot)
+
+	log.Info("creating operator")
+	newOperator := operator.NewOperator(
+		config, database, requester, telegramBot,
+	)
+
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
@@ -106,5 +125,15 @@ func main() {
 			time.Sleep(diff)
 		}
 	}()
+
+	wg.Add(2)
+	go func() {
+
+		telegramBot.Handle("/start", newOperator.Start)
+		log.Infof(nil, "starting to listen and serve telegram bot")
+		bot.Start()
+
+	}()
+
 	wg.Wait()
 }

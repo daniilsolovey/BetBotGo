@@ -127,6 +127,14 @@ func handleLiveEventOdds(event *requester.EventWithOdds) (bool, int, error) {
 	}
 
 	setData := event.ResultEventWithOdds.Odds.Odds91_1[0].SS
+	if event.ResultEventWithOdds.Odds.Odds91_1[0].HomeOd == "-" {
+		event.ResultEventWithOdds.Odds.Odds91_1[0].HomeOd = "0000"
+	}
+
+	if event.ResultEventWithOdds.Odds.Odds91_1[0].HomeOd == "-" {
+		event.ResultEventWithOdds.Odds.Odds91_1[0].HomeOd = "0000"
+	}
+
 	homeOdd, err := convertStringToFloat(event.ResultEventWithOdds.Odds.Odds91_1[0].HomeOd)
 	if err != nil {
 		return false, 0, err

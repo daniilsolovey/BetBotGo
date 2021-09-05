@@ -146,7 +146,7 @@ func TestOperator_GetEvents_ReturnWinnerResult(
 
 	requester := createRequester()
 
-	operator := NewOperator(nil, nil, requester)
+	operator := NewOperator(nil, nil, requester, nil)
 
 	events, err := operator.GetEvents()
 	if err != nil {
@@ -163,7 +163,7 @@ func TestOperator_getWinner_ReturnWinnerResult(
 	}
 
 	testRequester := createRequester()
-	operator := NewOperator(nil, nil, testRequester)
+	operator := NewOperator(nil, nil, testRequester, nil)
 
 	upcomingEvents, err := testRequester.GetUpcomingEvents()
 	if err != nil {

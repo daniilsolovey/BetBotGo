@@ -8,6 +8,7 @@ import (
 	"github.com/daniilsolovey/BetBotGo/internal/database"
 	"github.com/daniilsolovey/BetBotGo/internal/requester"
 	"github.com/daniilsolovey/BetBotGo/internal/tools"
+	"github.com/daniilsolovey/BetBotGo/internal/transport"
 	"github.com/reconquest/karma-go"
 	"github.com/reconquest/pkg/log"
 )
@@ -16,17 +17,20 @@ type Operator struct {
 	config    *config.Config
 	database  *database.Database
 	requester requester.RequesterInterface
+	transport transport.Transport
 }
 
 func NewOperator(
 	config *config.Config,
 	database *database.Database,
 	requester requester.RequesterInterface,
+	transport transport.Transport,
 ) *Operator {
 	return &Operator{
 		config:    config,
 		database:  database,
 		requester: requester,
+		transport: transport,
 	}
 }
 
