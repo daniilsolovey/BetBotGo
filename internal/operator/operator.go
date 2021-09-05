@@ -85,7 +85,10 @@ func (operator *Operator) RoutineHandleLiveOdds(event requester.EventWithOdds) e
 			"unable to get moscow time",
 		)
 	}
-
+	// if timeNow.Before(event.HumanTime) {
+	// 	diff := event.HumanTime.Sub(timeNow)
+	// 	time.Sleep(diff)
+	// }
 	diff := event.HumanTime.Sub(timeNow)
 	time.Sleep(diff)
 	liveEventResult := operator.createLoopForGetWinner(event)
@@ -191,3 +194,26 @@ func (operator *Operator) CreateRoutinesForEachEvent(events []requester.EventWit
 
 	return nil
 }
+
+// func (operator *Operator) CreateRoutinesForEachEvent(events []requester.EventWithOdds) error {
+// 	timeNow, err := tools.GetCurrentMoscowTime()
+// 	if err != nil {
+// 		return karma.Format(
+// 			err,
+// 			"unable to get moscow time for check that event ready to start in go-routine",
+// 		)
+// 	}
+
+// 	for _, event := range events {
+// 		if event.HumanTime.After(timeNow) || event.HumanTime.Before(timeNow) && event.HumanTime.Before(timeNow.Add(30*time.Minute)) {
+// 			go operator.RoutineHandleLiveOdds(event)
+// 		}
+
+// 		// if event.HumanTime.Before(timeNow) && event.HumanTime.Before(timeNow.Add(60*time.Minute)) {
+// 		// 	go operator.RoutineHandleLiveOdds(event)
+// 		// }
+
+// 	}
+
+// 	return nil
+// }

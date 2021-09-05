@@ -2,6 +2,7 @@ package operator
 
 import (
 	"errors"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -121,6 +122,11 @@ func convertStringToFloat(data string) (float64, error) {
 }
 
 func handleLiveEventOdds(event *requester.EventWithOdds) (bool, int, error) {
+	//not tested:
+	if reflect.DeepEqual(event.ResultEventWithOdds.Odds, requester.Odds{}) {
+		return false, 0, errors.New("event.ResultEventWithOdds.Odds is empty")
+	}
+
 	if len(event.ResultEventWithOdds.Odds.Odds91_1) == 0 {
 		return false, 0, errors.New("len of sets is null")
 	}
