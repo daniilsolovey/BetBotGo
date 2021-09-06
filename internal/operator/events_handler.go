@@ -15,15 +15,6 @@ import (
 
 func getUpcomingEventsForToday(upcomingEvents *requester.UpcomingEvents) (*requester.UpcomingEvents, error) {
 	var result requester.UpcomingEvents
-	// moscowTime, err := time.LoadLocation("Europe/Moscow")
-	// if err != nil {
-	// 	return nil, karma.Format(
-	// 		err,
-	// 		"unable to load location: Europe/Moscow",
-	// 	)
-	// }
-
-	// timeNow := time.Now().In(moscowLocation)
 	moscowLocation, err := tools.GetTimeMoscowLocation()
 	if err != nil {
 		return nil, karma.Format(
@@ -52,7 +43,7 @@ func getUpcomingEventsForToday(upcomingEvents *requester.UpcomingEvents) (*reque
 
 		convertedTime := time.Unix(parsedTime, 0).In(moscowLocation)
 		if convertedTime.After(timeNow) &&
-			convertedTime.Before(timeNow.Truncate(24*time.Hour).Add(21*time.Hour)) {
+			convertedTime.Before(timeNow.Truncate(24*time.Hour).Add(21*time.Hour).Add(1*time.Second)) {
 			event.HumanTime = convertedTime
 			result.Results = append(result.Results, event)
 		}

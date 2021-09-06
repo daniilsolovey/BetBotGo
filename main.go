@@ -118,10 +118,7 @@ func main() {
 				log.Error(err)
 			}
 
-			log.Warning("timeNow ", timeNow)
-			log.Warning("endOfDay ", timeNow.Truncate(24*time.Hour).Add(21*time.Hour).Add(1*time.Second))
 			diff := timeNow.Truncate(24 * time.Hour).Add(21 * time.Hour).Add(1 * time.Second).Sub(timeNow)
-			log.Warning("diff ", diff)
 			time.Sleep(diff)
 		}
 	}()

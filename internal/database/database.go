@@ -103,10 +103,18 @@ func (database *Database) CreateTables() error {
 }
 
 func (database *Database) InsertEventsForToday(events []requester.EventWithOdds) error {
-	log.Infof(
-		karma.Describe("database", database.name),
-		"inserting events in database",
-	)
+	if len(events) != 0 {
+		log.Infof(
+			karma.Describe("database", database.name),
+			"inserting events in database",
+		)
+	} else {
+		log.Infof(
+			karma.Describe("database", database.name),
+			"empty list with events for today",
+		)
+		return nil
+	}
 
 	for _, event := range events {
 		_, err := database.client.Query(
