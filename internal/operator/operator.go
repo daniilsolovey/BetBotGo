@@ -16,6 +16,7 @@ import (
 const (
 	MONITORING_LIVE_EVENT_TIME_DELAY          = 30 * time.Minute
 	MAX_ERROR_COUNT_IN_MONITORING_LIVE_EVENTS = 100
+	SELF_DISTRUCT_ROUTINE_LIVE_EVENT_TIMER    = 2 * time.Hour
 )
 
 type Operator struct {
@@ -136,7 +137,15 @@ func (operator *Operator) SendMessageAboutWinnerToTelegram(event requester.Event
 }
 
 func (operator *Operator) createLoopForGetWinner(event requester.EventWithOdds) bool {
+	timer := time.NewTimer(SELF_DISTRUCT_ROUTINE_LIVE_EVENT_TIMER)
+	<-timer.C
+	log.Info("timer routine started")
 	for {
+		if timer.Stop() {
+			log.Info("timer routine stopped")
+			return false
+		}
+
 		liveEventResult := operator.getWinner(event, 0)
 		switch liveEventResult {
 		case "finished with error":

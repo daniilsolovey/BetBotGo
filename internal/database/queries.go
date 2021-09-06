@@ -53,4 +53,14 @@ const (
 	)
 	VALUES($1, $2, $3, $4, $5);
 `
+
+	SQL_CREATE_TABLE_TELEGRAM_SUBSCRIBERS = `
+	CREATE TABLE IF NOT EXISTS
+	telegram_subscribers(
+		id serial PRIMARY KEY,
+		secret_key VARCHAR(50),
+		secret_key_expired_at TIMESTAMP,
+		created_at TIMESTAMP
+);
+`
 )
