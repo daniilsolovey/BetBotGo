@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/daniilsolovey/BetBotGo/internal/requester"
+	"github.com/daniilsolovey/BetBotGo/internal/tools"
 	"github.com/jackc/pgx/v4/pgxpool"
 
 	"github.com/reconquest/karma-go"
@@ -71,16 +72,33 @@ func (database *Database) CreateTables() error {
 		"create tables in database",
 	)
 
+	log.Info("creating events_volleyball table")
 	_, err := database.client.Query(
 		context.Background(),
-		SQL_CREATE_TABLE_UPCOMING_EVENTS)
+		SQL_CREATE_TABLE_UPCOMING_EVENTS,
+	)
 	if err != nil {
 		return karma.Format(
 			err,
-			"unable to create upcoming_events table in the database",
+			"unable to create events_volleyball table in the database",
 		)
 	}
 
+	log.Info("events_volleyball table successfully created")
+
+	log.Info("creating live_events_results table")
+	_, err = database.client.Query(
+		context.Background(),
+		SQL_CREATE_TABLE_LIVE_EVENTS_RESULTS,
+	)
+	if err != nil {
+		return karma.Format(
+			err,
+			"unable to create live_events_results table in the database",
+		)
+	}
+
+	log.Info("live_events_results table successfully created")
 	return nil
 }
 
@@ -99,6 +117,8 @@ func (database *Database) InsertEventsForToday(events []requester.EventWithOdds)
 			event.League.ID,
 			event.League.Name,
 			event.Favorite,
+			event.HomeCommandName,
+			event.AwayCommandName,
 			event.HomeOdd,
 			event.AwayOdd,
 		)
@@ -117,6 +137,42 @@ func (database *Database) InsertEventsForToday(events []requester.EventWithOdds)
 	}
 
 	log.Info("events successfully added")
+	return nil
+}
+
+func (database *Database) InsertLiveEventResult(event requester.EventWithOdds) error {
+	log.Infof(
+		karma.Describe("database", database.name),
+		"inserting live event result in database",
+	)
+
+	timeNow, err := tools.GetCurrentMoscowTime()
+	if err != nil {
+		return karma.Format(
+			err,
+			"unable to get current time before inserting data to live_events_results",
+		)
+	}
+
+	_, err = database.client.Query(
+		context.Background(),
+		SQL_INSERT_LIVE_EVENTS_RESULTS,
+		event.EventID,
+		event.ResultEventWithOdds.Odds.Odds91_1[0].HomeOd,
+		event.ResultEventWithOdds.Odds.Odds91_1[0].AwayOd,
+		event.ResultEventWithOdds.Odds.Odds91_1[0].SS,
+		timeNow,
+	)
+	if err != nil {
+		return karma.Format(
+			err,
+			"unable to add live event to the database,"+
+				" event: %v, event_id: %s",
+			event, event.EventID,
+		)
+	}
+
+	log.Info("live event successfully added")
 	return nil
 }
 

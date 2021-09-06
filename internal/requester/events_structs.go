@@ -43,10 +43,12 @@ type EventWithOdds struct {
 		CC   string `json:"cc"`
 	}
 
-	HumanTime time.Time
-	Favorite  string
-	HomeOdd   float64
-	AwayOdd   float64
+	HumanTime       time.Time
+	Favorite        string
+	HomeCommandName string
+	AwayCommandName string
+	HomeOdd         float64
+	AwayOdd         float64
 }
 
 type ResultEventWithOdds struct {

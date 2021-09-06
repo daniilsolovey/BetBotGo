@@ -93,12 +93,20 @@ func (operator *Operator) RoutineHandleLiveOdds(event requester.EventWithOdds) e
 	time.Sleep(diff)
 	liveEventResult := operator.createLoopForGetWinner(event)
 	if liveEventResult {
-		log.Info("sent to bot")
 		err := operator.SendMessageAboutWinnerToTelegram(event)
 		if err != nil {
 			log.Error(err)
+		} else {
+			log.Infof(nil, "live event sent to telegram, event: %v", event)
+			log.Infof(nil, "live event inserted to database, event: %v", event)
 		}
-		// send message to telegram bot
+
+		err = operator.database.InsertLiveEventResult(event)
+		if err != nil {
+			log.Error(err)
+		} else {
+			log.Infof(nil, "live event inserted to database, event: %v", event)
+		}
 	}
 
 	log.Infof(nil, "routine successfully finished for event_id: %s", event.EventID)
