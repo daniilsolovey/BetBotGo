@@ -13,6 +13,11 @@ import (
 	"github.com/reconquest/pkg/log"
 )
 
+const (
+	MONITORING_LIVE_EVENT_TIME_DELAY          = 30 * time.Minute
+	MAX_ERROR_COUNT_IN_MONITORING_LIVE_EVENTS = 100
+)
+
 type Operator struct {
 	config    *config.Config
 	database  *database.Database
@@ -85,12 +90,12 @@ func (operator *Operator) RoutineHandleLiveOdds(event requester.EventWithOdds) e
 			"unable to get moscow time",
 		)
 	}
-	// if timeNow.Before(event.HumanTime) {
-	// 	diff := event.HumanTime.Sub(timeNow)
-	// 	time.Sleep(diff)
-	// }
-	diff := event.EventStartTime.Sub(timeNow)
-	time.Sleep(diff)
+
+	if timeNow.Before(event.EventStartTime) {
+		diff := event.EventStartTime.Sub(timeNow)
+		time.Sleep(diff)
+	}
+
 	liveEventResult := operator.createLoopForGetWinner(event)
 	if liveEventResult {
 		err := operator.SendMessageAboutWinnerToTelegram(event)
@@ -98,7 +103,6 @@ func (operator *Operator) RoutineHandleLiveOdds(event requester.EventWithOdds) e
 			log.Error(err)
 		} else {
 			log.Infof(nil, "live event sent to telegram, event: %v", event)
-			log.Infof(nil, "live event inserted to database, event: %v", event)
 		}
 
 		err = operator.database.InsertLiveEventResult(event)
@@ -152,10 +156,10 @@ func (operator *Operator) getWinner(event requester.EventWithOdds, errCount int)
 	log.Infof(nil, "handle live odds for event: %v", event)
 	liveEvent, err := operator.requester.GetLiveEventByID(event.EventID)
 	if err != nil {
-		if errCount < 5 {
+		if errCount < MAX_ERROR_COUNT_IN_MONITORING_LIVE_EVENTS {
 			log.Errorf(err, "unable to get live event data by event_id: %s", event.EventID)
 			errCount = +1
-			time.Sleep(1 * time.Second)
+			time.Sleep(2 * time.Second)
 		} else {
 			// break
 			return "finished with error"
@@ -164,10 +168,10 @@ func (operator *Operator) getWinner(event requester.EventWithOdds, errCount int)
 
 	liveEventResult, numberOfSet, err := handleLiveEventOdds(liveEvent)
 	if err != nil {
-		if errCount < 5 {
+		if errCount < MAX_ERROR_COUNT_IN_MONITORING_LIVE_EVENTS {
 			log.Errorf(err, "unable to handle live event event_id: %s", liveEvent.EventID)
 			errCount = +1
-			time.Sleep(1 * time.Second)
+			time.Sleep(2 * time.Second)
 		} else {
 			return "finished with error"
 		}
@@ -195,7 +199,7 @@ func (operator *Operator) CreateRoutinesForEachEvent(events []requester.EventWit
 	}
 
 	for _, event := range events {
-		if event.EventStartTime.After(timeNow) {
+		if event.EventStartTime.After(timeNow) || event.EventStartTime.Before(event.EventStartTime.Add(MONITORING_LIVE_EVENT_TIME_DELAY)) {
 			go operator.RoutineHandleLiveOdds(event)
 		}
 	}
