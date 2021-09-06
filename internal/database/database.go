@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"strings"
 
@@ -182,6 +183,53 @@ func (database *Database) InsertLiveEventResult(event requester.EventWithOdds) e
 
 	log.Info("live event successfully added")
 	return nil
+}
+
+func (database *Database) GetLiveEventsResultsOnCurrentDate() ([]requester.LiveEventResult, error) {
+	rows, err := database.client.Query(
+		context.Background(),
+		SQL_SELECT_LIVE_EVENTS_AT_END_OF_DAY,
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+
+		return nil, karma.Format(
+			err,
+			"unable to get live events on current date from the database",
+		)
+	}
+
+	defer func() {
+		rows.Close()
+		log.Error(err)
+	}()
+
+	var result []requester.LiveEventResult
+	for rows.Next() {
+		var (
+			liveEvent requester.LiveEventResult
+		)
+
+		err := rows.Scan(
+			&liveEvent.EventID,
+			&liveEvent.LastHomeOdd,
+			&liveEvent.LastAwayOdd,
+			&liveEvent.Score,
+			&liveEvent.CreatedAt,
+		)
+
+		if err != nil {
+			return nil, karma.Format(
+				err,
+				"error during scaning accruals from database rows",
+			)
+		}
+	}
+
+	return result, nil
 }
 
 // func (database *Database) InsertEventsForToday(events []requester.EventWithOdds) error {

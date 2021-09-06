@@ -75,3 +75,15 @@ type OddsNumber struct {
 	SS      string `json:"ss"`
 	AddTime string `json:"add_time"`
 }
+
+type LiveEventResult struct {
+	EventID         string
+	Favorite        string
+	HomeCommandName string
+	AwayCommandName string
+	LastHomeOdd     float64
+	LastAwayOdd     float64
+	LeagueName      string
+	Score           string
+	CreatedAt       time.Time
+}

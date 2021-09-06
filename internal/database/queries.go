@@ -35,8 +35,8 @@ const (
 		live_events_results(
 			id serial PRIMARY KEY,
     		event_id VARCHAR(50),
-			last_odd_home DECIMAL,
-			last_odd_away DECIMAL,
+			last_odd_home VARCHAR(50),
+			last_odd_away VARCHAR(50),
 			score VARCHAR(50),
     		created_at TIMESTAMP,
     		FOREIGN KEY (event_id) REFERENCES events_volleyball (event_id)
@@ -61,6 +61,10 @@ const (
 		secret_key VARCHAR(50),
 		secret_key_expired_at TIMESTAMP,
 		created_at TIMESTAMP
-);
+	);
+`
+
+	SQL_SELECT_LIVE_EVENTS_AT_END_OF_DAY = `
+	SELECT * FROM live_events_results WHERE DATE(date)=CURDATE()
 `
 )

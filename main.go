@@ -98,27 +98,37 @@ func main() {
 	go func() {
 		log.Info("start cycle with receiving events for today")
 		for {
-			events, err := newOperator.GetEvents()
-			if err != nil {
-				log.Error(err)
-			}
-
-			err = database.InsertEventsForToday(events)
-			if err != nil {
-				log.Error(err)
-			}
-
-			err = newOperator.CreateRoutinesForEachEvent(events)
-			if err != nil {
-				log.Error(err)
-			}
-
 			timeNow, err := tools.GetCurrentMoscowTime()
 			if err != nil {
 				log.Error(err)
 			}
 
-			diff := timeNow.Truncate(24 * time.Hour).Add(21 * time.Hour).Add(1 * time.Second).Sub(timeNow)
+			events, err := newOperator.GetEvents()
+			if err != nil {
+				log.Error(err)
+			}
+
+			if len(events) == 0 {
+				log.Warning("len(events) ", len(events))
+				diff := timeNow.Add(1 * time.Hour).Sub(timeNow)
+				time.Sleep(diff)
+				continue
+			}
+
+			log.Info("insert events for today to database")
+			err = database.InsertEventsForToday(events)
+			if err != nil {
+				log.Error(err)
+			}
+
+			log.Info("creating routines for each event")
+			err = newOperator.CreateRoutinesForEachEvent(events)
+			if err != nil {
+				log.Error(err)
+			}
+
+			diff := timeNow.Sub(timeNow.Truncate(24 * time.Hour).Add(21 * time.Hour).Add(1 * time.Second))
+			log.Warning("diff ", diff)
 			time.Sleep(diff)
 		}
 	}()
