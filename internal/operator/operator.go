@@ -89,7 +89,7 @@ func (operator *Operator) RoutineHandleLiveOdds(event requester.EventWithOdds) e
 	// 	diff := event.HumanTime.Sub(timeNow)
 	// 	time.Sleep(diff)
 	// }
-	diff := event.HumanTime.Sub(timeNow)
+	diff := event.EventStartTime.Sub(timeNow)
 	time.Sleep(diff)
 	liveEventResult := operator.createLoopForGetWinner(event)
 	if liveEventResult {
@@ -195,7 +195,7 @@ func (operator *Operator) CreateRoutinesForEachEvent(events []requester.EventWit
 	}
 
 	for _, event := range events {
-		if event.HumanTime.After(timeNow) {
+		if event.EventStartTime.After(timeNow) {
 			go operator.RoutineHandleLiveOdds(event)
 		}
 	}

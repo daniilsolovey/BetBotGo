@@ -113,7 +113,7 @@ func (database *Database) InsertEventsForToday(events []requester.EventWithOdds)
 			context.Background(),
 			SQL_INSERT_EVENTS_FOR_TODAY,
 			event.EventID,
-			event.HumanTime,
+			event.EventStartTime,
 			event.League.ID,
 			event.League.Name,
 			event.Favorite,

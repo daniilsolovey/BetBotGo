@@ -107,7 +107,7 @@ func (requester *Requester) GetEventOddsByEventIDs(events *UpcomingEvents) ([]Ev
 		}
 
 		eventWithOdds.League = event.League
-		eventWithOdds.HumanTime = event.HumanTime
+		eventWithOdds.EventStartTime = event.HumanTime
 		eventWithOdds.EventID = event.ID
 		eventWithOdds.HomeCommandName = event.Home.Name
 		eventWithOdds.AwayCommandName = event.Away.Name

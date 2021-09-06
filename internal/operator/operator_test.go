@@ -98,9 +98,9 @@ func (testRequester *TestRequester) GetEventOddsByEventIDs(events *requester.Upc
 		log.Fatal(err)
 	}
 
-	event1.HumanTime = events.Results[0].HumanTime
-	event2.HumanTime = events.Results[1].HumanTime
-	event3.HumanTime = events.Results[2].HumanTime
+	event1.EventStartTime = events.Results[0].HumanTime
+	event2.EventStartTime = events.Results[1].HumanTime
+	event3.EventStartTime = events.Results[2].HumanTime
 	event1.EventID = events.Results[0].ID
 	event2.EventID = events.Results[1].ID
 	event3.EventID = events.Results[2].ID

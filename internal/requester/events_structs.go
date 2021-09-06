@@ -43,7 +43,7 @@ type EventWithOdds struct {
 		CC   string `json:"cc"`
 	}
 
-	HumanTime       time.Time
+	EventStartTime  time.Time
 	Favorite        string
 	HomeCommandName string
 	AwayCommandName string
