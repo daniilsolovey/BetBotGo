@@ -43,12 +43,13 @@ type EventWithOdds struct {
 		CC   string `json:"cc"`
 	}
 
-	EventStartTime  time.Time
-	Favorite        string
-	HomeCommandName string
-	AwayCommandName string
-	HomeOdd         float64
-	AwayOdd         float64
+	EventStartTime    time.Time
+	Favorite          string
+	HomeCommandName   string
+	AwayCommandName   string
+	HomeOdd           float64
+	AwayOdd           float64
+	WinnerInSecondSet string
 }
 
 type ResultEventWithOdds struct {

@@ -112,10 +112,28 @@ func (operator *Operator) RoutineHandleLiveOdds(event requester.EventWithOdds) e
 		} else {
 			log.Infof(nil, "live event inserted to database, event: %v", event)
 		}
+
+		go operator.RoutineHandleLiveOddsForSecondSet(event)
 	}
 
 	log.Infof(nil, "routine successfully finished for event_id: %s", event.EventID)
 	return nil
+}
+
+func (operator *Operator) RoutineHandleLiveOddsForSecondSet(event requester.EventWithOdds) {
+	secondSetIsFinished := operator.createLoopForSecondSet(event)
+	if secondSetIsFinished {
+		setData := event.ResultEventWithOdds.Odds.Odds91_1[0].SS
+		winner := getWinnerInSecondSet(setData)
+		event.WinnerInSecondSet = winner
+		//write to database result of second set
+		err := operator.database.UpdateLiveEventsResultsScoreAndWinnerFields(event)
+		if err != nil {
+			log.Error(err)
+		} else {
+			log.Infof(nil, "live event successfully updated in database, event: %v", event)
+		}
+	}
 }
 
 func (operator *Operator) SendMessageAboutWinnerToTelegram(event requester.EventWithOdds) error {
@@ -134,6 +152,61 @@ func (operator *Operator) SendMessageAboutWinnerToTelegram(event requester.Event
 	}
 
 	return nil
+}
+
+func (operator *Operator) createLoopForSecondSet(event requester.EventWithOdds) bool {
+	timer := time.NewTimer(SELF_DISTRUCT_ROUTINE_LIVE_EVENT_TIMER)
+	<-timer.C
+	log.Info("timer routine started")
+	for {
+		if timer.Stop() {
+			log.Info("timer routine stopped")
+			return false
+		}
+
+		liveEventResult := operator.getResultsOfSecondSet(event, 0)
+		switch liveEventResult {
+		case "finished with error":
+			return false
+		case "numberOfSet=3":
+			return true
+		case "":
+			time.Sleep(1 * time.Second)
+			continue
+		}
+	}
+}
+
+func (operator *Operator) getResultsOfSecondSet(event requester.EventWithOdds, errCount int) string {
+	log.Infof(nil, "handle live odds for event: %v", event)
+	liveEvent, err := operator.requester.GetLiveEventByID(event.EventID)
+	if err != nil {
+		if errCount < MAX_ERROR_COUNT_IN_MONITORING_LIVE_EVENTS {
+			log.Errorf(err, "unable to get live event data by event_id: %s", event.EventID)
+			errCount = +1
+			time.Sleep(2 * time.Second)
+		} else {
+			// break
+			return "finished with error"
+		}
+	}
+
+	_, numberOfSet, err := handleLiveEventOdds(liveEvent)
+	if err != nil {
+		if errCount < MAX_ERROR_COUNT_IN_MONITORING_LIVE_EVENTS {
+			log.Errorf(err, "unable to handle live event event_id: %s", liveEvent.EventID)
+			errCount = +1
+			time.Sleep(2 * time.Second)
+		} else {
+			return "finished with error"
+		}
+	}
+
+	if numberOfSet == 3 {
+		return "numberOfSet=3"
+	}
+
+	return ""
 }
 
 func (operator *Operator) createLoopForGetWinner(event requester.EventWithOdds) bool {

@@ -127,7 +127,9 @@ func main() {
 				log.Error(err)
 			}
 
-			diff := timeNow.Sub(timeNow.Truncate(24 * time.Hour).Add(21 * time.Hour).Add(1 * time.Second))
+			log.Warning("timeNow.Truncate(24 * time.Hour).Add(21 * time.Hour).Add(1 * time.Second) ", timeNow.Truncate(24*time.Hour).Add(21*time.Hour).Add(1*time.Second))
+			diff := timeNow.Truncate(24 * time.Hour).Add(21 * time.Hour).Add(1 * time.Second).Sub(timeNow)
+			log.Warning("timeNow ", timeNow)
 			log.Warning("diff ", diff)
 			time.Sleep(diff)
 		}

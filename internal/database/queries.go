@@ -38,10 +38,20 @@ const (
 			last_odd_home VARCHAR(50),
 			last_odd_away VARCHAR(50),
 			score VARCHAR(50),
+			winner VARCHAR(50),
     		created_at TIMESTAMP,
     		FOREIGN KEY (event_id) REFERENCES events_volleyball (event_id)
 	);
 `
+
+	SQL_UPDATE_LIVE_EVENTS_RESULTS_SCORE_AND_WINNER = `
+	UPDATE live_events_results
+		SET
+			score = $1,
+			winner = $2
+	WHERE live_events_results.event_id = $3;
+`
+
 	SQL_INSERT_LIVE_EVENTS_RESULTS = `
 	INSERT INTO
 	live_events_results(

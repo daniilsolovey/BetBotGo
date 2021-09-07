@@ -175,6 +175,21 @@ func getWinnerInFirstSet(setData string) string {
 	return ""
 }
 
+func getWinnerInSecondSet(setData string) string {
+	liveSetScore := getLiveSetScore(setData)
+	numberOfSet := getNumberOfSet(setData)
+	if numberOfSet == 3 {
+		splittedScore := strings.Split(liveSetScore[1], "-")
+		if splittedScore[0] > splittedScore[1] {
+			return constants.WINNER_HOME
+		} else {
+			return constants.WINNER_AWAY
+		}
+	}
+
+	return ""
+}
+
 func getNumberOfSet(set string) int {
 	liveSetScore := getLiveSetScore(set)
 	if liveSetScore == nil {
