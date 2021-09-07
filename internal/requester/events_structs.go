@@ -78,13 +78,14 @@ type OddsNumber struct {
 }
 
 type LiveEventResult struct {
-	EventID         string
-	Favorite        string
-	HomeCommandName string
-	AwayCommandName string
-	LastHomeOdd     float64
-	LastAwayOdd     float64
-	LeagueName      string
-	Score           string
-	CreatedAt       time.Time
+	EventID           string
+	Favorite          string
+	HomeCommandName   string
+	AwayCommandName   string
+	LastHomeOdd       float64
+	LastAwayOdd       float64
+	LeagueName        string
+	Score             string
+	WinnerInSecondSet string
+	CreatedAt         time.Time
 }

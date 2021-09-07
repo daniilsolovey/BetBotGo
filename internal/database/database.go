@@ -99,7 +99,19 @@ func (database *Database) CreateTables() error {
 		)
 	}
 
-	log.Info("live_events_results table successfully created")
+	log.Info("creating statistic_on_current_day table")
+	_, err = database.client.Query(
+		context.Background(),
+		SQL_CREATE_TABLE_STATISTIC_ON_CURRENT_DAY,
+	)
+	if err != nil {
+		return karma.Format(
+			err,
+			"unable to create statistic_on_current_day table in the database",
+		)
+	}
+
+	log.Info("statistic_on_current_day table successfully created")
 	return nil
 }
 
@@ -146,6 +158,62 @@ func (database *Database) InsertEventsForToday(events []requester.EventWithOdds)
 	}
 
 	log.Info("events successfully added")
+	return nil
+}
+
+func (database *Database) InsertEventsResultsToStatistic(events []requester.LiveEventResult) error {
+	if len(events) != 0 {
+		log.Infof(
+			karma.Describe("database", database.name),
+			"inserting events to statistic in database",
+		)
+	} else {
+		log.Infof(
+			karma.Describe("database", database.name),
+			"empty list with events for today",
+		)
+		return nil
+	}
+
+	timeNow, err := tools.GetCurrentMoscowTime()
+	if err != nil {
+		return karma.Format(
+			err,
+			"unable to get current moscow time before inserting events results to statistic",
+		)
+	}
+
+	for _, event := range events {
+		var playerIsWin string // can be "true"/"false" only
+		if event.WinnerInSecondSet == event.Favorite {
+			playerIsWin = "true"
+		} else {
+			playerIsWin = "false"
+		}
+		_, err := database.client.Query(
+			context.Background(),
+			SQL_INSERT_STATISTIC_ON_CURRENT_DAY,
+			event.EventID,
+			playerIsWin,
+			event.Score,
+			event.WinnerInSecondSet,
+			timeNow,
+		)
+		if err != nil {
+			if strings.Contains(err.Error(), "ERROR: duplicate key value violates unique constraint") {
+				continue
+			}
+
+			return karma.Format(
+				err,
+				"unable to add event to the database,"+
+					" event: %v, event_id: %s",
+				event, event.EventID,
+			)
+		}
+	}
+
+	log.Info("events successfully added to statistic")
 	return nil
 }
 
@@ -196,6 +264,8 @@ func (database *Database) InsertLiveEventResult(event requester.EventWithOdds) e
 		event.ResultEventWithOdds.Odds.Odds91_1[0].HomeOd,
 		event.ResultEventWithOdds.Odds.Odds91_1[0].AwayOd,
 		event.ResultEventWithOdds.Odds.Odds91_1[0].SS,
+		event.WinnerInSecondSet,
+		event.Favorite,
 		timeNow,
 	)
 	if err != nil {
@@ -244,6 +314,9 @@ func (database *Database) GetLiveEventsResultsOnCurrentDate() ([]requester.LiveE
 			&liveEvent.LastHomeOdd,
 			&liveEvent.LastAwayOdd,
 			&liveEvent.Score,
+			&liveEvent.Score,
+			&liveEvent.Favorite,
+			&liveEvent.WinnerInSecondSet,
 			&liveEvent.CreatedAt,
 		)
 

@@ -143,6 +143,8 @@ func (operator *Operator) SendMessageAboutWinnerToTelegram(event requester.Event
 		event.League.Name,
 		event.ResultEventWithOdds.Odds.Odds91_1[0].HomeOd,
 		event.ResultEventWithOdds.Odds.Odds91_1[0].AwayOd,
+		event.HomeCommandName,
+		event.AwayCommandName,
 		event.Favorite,
 	)
 

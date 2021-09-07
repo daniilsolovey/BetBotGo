@@ -15,6 +15,8 @@ const (
 		"  league_name: %s\n" +
 		"  last_odd_home: %s\n" +
 		"  last_odd_away: %s\n" +
+		"  home_command_name: %s\n" +
+		"  away_command_name: %s\n" +
 		"  favorite: %s\n"
 )
 

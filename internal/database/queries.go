@@ -38,17 +38,41 @@ const (
 			last_odd_home VARCHAR(50),
 			last_odd_away VARCHAR(50),
 			score VARCHAR(50),
-			winner VARCHAR(50),
+			winner_in_second_set VARCHAR(20),
+			favorite VARCHAR(20),
     		created_at TIMESTAMP,
     		FOREIGN KEY (event_id) REFERENCES events_volleyball (event_id)
 	);
 `
+	SQL_CREATE_TABLE_STATISTIC_ON_CURRENT_DAY = `
+	CREATE TABLE IF NOT EXISTS
+		statistic_on_current_day(
+			id serial PRIMARY KEY,
+			player_is_win VARCHAR(20),
+			score VARCHAR(50),
+			winner_in_second_set VARCHAR(20),
+    		created_at TIMESTAMP,
+    		FOREIGN KEY (event_id) REFERENCES events_volleyball (event_id)
+	);
+`
+	//player_is_win should contain only true/false
 
+	SQL_INSERT_STATISTIC_ON_CURRENT_DAY = `
+	INSERT INTO
+		statistic_on_current_day(
+			event_id,
+			player_is_win,
+			score,
+			winner_in_second_set,
+    		created_at
+	)
+	VALUES($1, $2, $3, $4, $5);
+`
 	SQL_UPDATE_LIVE_EVENTS_RESULTS_SCORE_AND_WINNER = `
 	UPDATE live_events_results
 		SET
 			score = $1,
-			winner = $2
+			winner_in_second_set = $2
 	WHERE live_events_results.event_id = $3;
 `
 
@@ -59,9 +83,11 @@ const (
 		last_odd_home,
 		last_odd_away,
 		score,
+		winner_in_second_set,
+		favorite,
 		created_at
 	)
-	VALUES($1, $2, $3, $4, $5);
+	VALUES($1, $2, $3, $4, $5, $6, $7);
 `
 
 	SQL_CREATE_TABLE_TELEGRAM_SUBSCRIBERS = `
