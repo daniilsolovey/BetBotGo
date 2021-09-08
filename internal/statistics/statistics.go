@@ -19,7 +19,7 @@ func NewStatistics(
 }
 
 func (statistics *Statistics) GetLiveEventsResultsOnCurrentDateAndWriteToStatistic() error {
-	events, err := statistics.database.GetLiveEventsResultsOnCurrentDate()
+	events, err := statistics.database.GetLiveEventsResultsOnPreviousDate()
 	if err != nil {
 		return karma.Format(
 			err,
@@ -27,7 +27,13 @@ func (statistics *Statistics) GetLiveEventsResultsOnCurrentDateAndWriteToStatist
 		)
 	}
 
-	statistics.database.InsertEventsResultsToStatistic(events)
+	err = statistics.database.InsertEventsResultsToStatistic(events)
+	if err != nil {
+		return karma.Format(
+			err,
+			"unable to insert events results on current date",
+		)
+	}
 
 	return nil
 }

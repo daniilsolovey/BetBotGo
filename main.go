@@ -10,6 +10,7 @@ import (
 	"github.com/daniilsolovey/BetBotGo/internal/database"
 	"github.com/daniilsolovey/BetBotGo/internal/operator"
 	"github.com/daniilsolovey/BetBotGo/internal/requester"
+	"github.com/daniilsolovey/BetBotGo/internal/statistics"
 	"github.com/daniilsolovey/BetBotGo/internal/tools"
 	"github.com/daniilsolovey/BetBotGo/internal/transport"
 	"github.com/docopt/docopt-go"
@@ -92,12 +93,22 @@ func main() {
 	newOperator := operator.NewOperator(
 		config, database, requester, telegramBot,
 	)
+	newStatistic := statistics.NewStatistics(database)
 
+	err = newStatistic.GetLiveEventsResultsOnCurrentDateAndWriteToStatistic()
+	if err != nil {
+		log.Fatal(err)
+	}
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
 		log.Info("start cycle with receiving events for today")
 		for {
+			err = newStatistic.GetLiveEventsResultsOnCurrentDateAndWriteToStatistic()
+			if err != nil {
+				log.Fatal(err)
+			}
+
 			timeNow, err := tools.GetCurrentMoscowTime()
 			if err != nil {
 				log.Error(err)
@@ -128,7 +139,7 @@ func main() {
 			}
 
 			log.Warning("timeNow.Truncate(24 * time.Hour).Add(21 * time.Hour).Add(1 * time.Second) ", timeNow.Truncate(24*time.Hour).Add(21*time.Hour).Add(1*time.Second))
-			diff := timeNow.Truncate(24 * time.Hour).Add(21 * time.Hour).Add(1 * time.Second).Sub(timeNow)
+			diff := timeNow.Truncate(24 * time.Hour).Add(21 * time.Hour).Sub(timeNow)
 			log.Warning("timeNow ", timeNow)
 			log.Warning("diff ", diff)
 			time.Sleep(diff)

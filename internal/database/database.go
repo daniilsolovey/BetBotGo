@@ -4,7 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/daniilsolovey/BetBotGo/internal/requester"
 	"github.com/daniilsolovey/BetBotGo/internal/tools"
@@ -102,7 +104,7 @@ func (database *Database) CreateTables() error {
 	log.Info("creating statistic_on_current_day table")
 	_, err = database.client.Query(
 		context.Background(),
-		SQL_CREATE_TABLE_STATISTIC_ON_CURRENT_DAY,
+		SQL_CREATE_TABLE_STATISTIC_ON_PREVIOUS_DAY,
 	)
 	if err != nil {
 		return karma.Format(
@@ -170,7 +172,7 @@ func (database *Database) InsertEventsResultsToStatistic(events []requester.Live
 	} else {
 		log.Infof(
 			karma.Describe("database", database.name),
-			"empty list with events for today",
+			"empty list with events for previous day when inserting in statistic",
 		)
 		return nil
 	}
@@ -192,7 +194,7 @@ func (database *Database) InsertEventsResultsToStatistic(events []requester.Live
 		}
 		_, err := database.client.Query(
 			context.Background(),
-			SQL_INSERT_STATISTIC_ON_CURRENT_DAY,
+			SQL_INSERT_STATISTIC_ON_PREVIOUS_DAY,
 			event.EventID,
 			playerIsWin,
 			event.Score,
@@ -281,10 +283,20 @@ func (database *Database) InsertLiveEventResult(event requester.EventWithOdds) e
 	return nil
 }
 
-func (database *Database) GetLiveEventsResultsOnCurrentDate() ([]requester.LiveEventResult, error) {
+func (database *Database) GetLiveEventsResultsOnPreviousDate() ([]requester.LiveEventResult, error) {
+	log.Info("receiving live events results on previous date before inserting it to statistic")
+	timeNow, err := tools.GetCurrentMoscowTime()
+	if err != nil {
+		return nil, karma.Format(
+			err,
+			"unable to get current moscow time for receive events results on previous date",
+		)
+	}
+	log.Warning("timeNOw ", timeNow)
 	rows, err := database.client.Query(
 		context.Background(),
 		SQL_SELECT_LIVE_EVENTS_AT_END_OF_DAY,
+		timeNow.Add(-24*time.Hour),
 	)
 
 	if err != nil {
@@ -306,28 +318,49 @@ func (database *Database) GetLiveEventsResultsOnCurrentDate() ([]requester.LiveE
 	var result []requester.LiveEventResult
 	for rows.Next() {
 		var (
-			liveEvent requester.LiveEventResult
+			liveEvent   requester.LiveEventResult
+			lastHomeOdd string
+			lastAwayOdd string
+			id          int
 		)
-
 		err := rows.Scan(
+			&id,
 			&liveEvent.EventID,
-			&liveEvent.LastHomeOdd,
-			&liveEvent.LastAwayOdd,
+			&lastHomeOdd,
+			&lastAwayOdd,
 			&liveEvent.Score,
-			&liveEvent.Score,
-			&liveEvent.Favorite,
 			&liveEvent.WinnerInSecondSet,
+			&liveEvent.Favorite,
 			&liveEvent.CreatedAt,
 		)
-
 		if err != nil {
 			return nil, karma.Format(
 				err,
 				"error during scaning accruals from database rows",
 			)
 		}
-	}
 
+		convertedLastHomeOdd, err := strconv.ParseFloat(lastHomeOdd, 64)
+		if err != nil {
+			return nil, karma.Format(
+				err,
+				"unable to parse home odd",
+			)
+		}
+
+		convertedLastAwayOdd, err := strconv.ParseFloat(lastAwayOdd, 64)
+		if err != nil {
+			return nil, karma.Format(
+				err,
+				"unable to parse home odd",
+			)
+		}
+
+		liveEvent.LastHomeOdd = convertedLastHomeOdd
+		liveEvent.LastAwayOdd = convertedLastAwayOdd
+		result = append(result, liveEvent)
+	}
+	log.Warning("result ", result)
 	return result, nil
 }
 

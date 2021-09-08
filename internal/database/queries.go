@@ -44,10 +44,12 @@ const (
     		FOREIGN KEY (event_id) REFERENCES events_volleyball (event_id)
 	);
 `
-	SQL_CREATE_TABLE_STATISTIC_ON_CURRENT_DAY = `
+	// переименовать statistic_on_current_day на statistic_on_previous_day
+	SQL_CREATE_TABLE_STATISTIC_ON_PREVIOUS_DAY = `
 	CREATE TABLE IF NOT EXISTS
 		statistic_on_current_day(
 			id serial PRIMARY KEY,
+			event_id VARCHAR(50),
 			player_is_win VARCHAR(20),
 			score VARCHAR(50),
 			winner_in_second_set VARCHAR(20),
@@ -57,10 +59,10 @@ const (
 `
 	//player_is_win should contain only true/false
 
-	SQL_INSERT_STATISTIC_ON_CURRENT_DAY = `
+	SQL_INSERT_STATISTIC_ON_PREVIOUS_DAY = `
 	INSERT INTO
 		statistic_on_current_day(
-			event_id,
+			event_id UNIQUE NOT NULL,
 			player_is_win,
 			score,
 			winner_in_second_set,
@@ -101,6 +103,12 @@ const (
 `
 
 	SQL_SELECT_LIVE_EVENTS_AT_END_OF_DAY = `
-	SELECT * FROM live_events_results WHERE DATE(date)=CURDATE()
+	SELECT * FROM live_events_results
+	WHERE CAST($1 AS Date) = CAST(live_events_results.created_at AS Date);
 `
 )
+
+// SQL_SELECT_LIVE_EVENTS_AT_END_OF_DAY = `
+// SELECT * FROM live_events_results
+// WHERE CAST($1 AS Date) = CAST(live_events_results.created_at AS Date);
+// `
