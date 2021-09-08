@@ -44,12 +44,11 @@ const (
     		FOREIGN KEY (event_id) REFERENCES events_volleyball (event_id)
 	);
 `
-	// переименовать statistic_on_current_day на statistic_on_previous_day
 	SQL_CREATE_TABLE_STATISTIC_ON_PREVIOUS_DAY = `
 	CREATE TABLE IF NOT EXISTS
-		statistic_on_current_day(
+	statistic_on_previous_day(
 			id serial PRIMARY KEY,
-			event_id VARCHAR(50),
+			event_id VARCHAR(50) UNIQUE NOT NULL,
 			player_is_win VARCHAR(20),
 			score VARCHAR(50),
 			winner_in_second_set VARCHAR(20),
@@ -61,8 +60,8 @@ const (
 
 	SQL_INSERT_STATISTIC_ON_PREVIOUS_DAY = `
 	INSERT INTO
-		statistic_on_current_day(
-			event_id UNIQUE NOT NULL,
+		statistic_on_previous_day(
+			event_id,
 			player_is_win,
 			score,
 			winner_in_second_set,

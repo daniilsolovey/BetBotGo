@@ -95,7 +95,7 @@ func main() {
 	)
 	newStatistic := statistics.NewStatistics(database)
 
-	err = newStatistic.GetLiveEventsResultsOnCurrentDateAndWriteToStatistic()
+	err = newStatistic.GetLiveEventsResultsOnPreviousDateAndWriteToStatistic()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -104,14 +104,14 @@ func main() {
 	go func() {
 		log.Info("start cycle with receiving events for today")
 		for {
-			err = newStatistic.GetLiveEventsResultsOnCurrentDateAndWriteToStatistic()
-			if err != nil {
-				log.Fatal(err)
-			}
-
 			timeNow, err := tools.GetCurrentMoscowTime()
 			if err != nil {
 				log.Error(err)
+			}
+
+			err = newStatistic.GetLiveEventsResultsOnPreviousDateAndWriteToStatistic()
+			if err != nil {
+				log.Fatal(err)
 			}
 
 			events, err := newOperator.GetEvents()
@@ -119,12 +119,12 @@ func main() {
 				log.Error(err)
 			}
 
-			if len(events) == 0 {
-				log.Warning("len(events) ", len(events))
-				diff := timeNow.Add(1 * time.Hour).Sub(timeNow)
-				time.Sleep(diff)
-				continue
-			}
+			// if len(events) == 0 {
+			// 	log.Warning("len(events) ", len(events))
+			// 	diff := timeNow.Add(1 * time.Hour).Sub(timeNow)
+			// 	time.Sleep(diff)
+			// 	continue
+			// }
 
 			log.Info("insert events for today to database")
 			err = database.InsertEventsForToday(events)

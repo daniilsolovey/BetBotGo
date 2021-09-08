@@ -18,7 +18,7 @@ func NewStatistics(
 	return statistics
 }
 
-func (statistics *Statistics) GetLiveEventsResultsOnCurrentDateAndWriteToStatistic() error {
+func (statistics *Statistics) GetLiveEventsResultsOnPreviousDateAndWriteToStatistic() error {
 	events, err := statistics.database.GetLiveEventsResultsOnPreviousDate()
 	if err != nil {
 		return karma.Format(
