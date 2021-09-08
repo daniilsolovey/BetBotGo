@@ -109,6 +109,10 @@ func main() {
 				log.Error(err)
 			}
 
+			beginOfDay := roundToBeginningOfDay(timeNow)
+			waitUntill := beginOfDay.Add(24 * time.Hour)
+			mainWaitingDiff := waitUntill.Sub(timeNow)
+
 			err = newStatistic.GetLiveEventsResultsOnPreviousDateAndWriteToStatistic()
 			if err != nil {
 				log.Fatal(err)
@@ -119,12 +123,14 @@ func main() {
 				log.Error(err)
 			}
 
-			// if len(events) == 0 {
-			// 	log.Warning("len(events) ", len(events))
-			// 	diff := timeNow.Add(1 * time.Hour).Sub(timeNow)
-			// 	time.Sleep(diff)
-			// 	continue
-			// }
+			if len(events) == 0 {
+				log.Warning("len(events) ", len(events))
+				diff := timeNow.Add(1 * time.Minute).Sub(timeNow)
+				if diff < mainWaitingDiff {
+					time.Sleep(diff)
+				}
+				continue
+			}
 
 			log.Info("insert events for today to database")
 			err = database.InsertEventsForToday(events)
@@ -138,11 +144,8 @@ func main() {
 				log.Error(err)
 			}
 
-			log.Warning("timeNow.Truncate(24 * time.Hour).Add(21 * time.Hour).Add(1 * time.Second) ", timeNow.Truncate(24*time.Hour).Add(21*time.Hour).Add(1*time.Second))
-			diff := timeNow.Truncate(24 * time.Hour).Add(21 * time.Hour).Sub(timeNow)
-			log.Warning("timeNow ", timeNow)
-			log.Warning("diff ", diff)
-			time.Sleep(diff)
+			log.Warning("mainWaitingDiff ", mainWaitingDiff)
+			time.Sleep(mainWaitingDiff)
 		}
 	}()
 
@@ -154,4 +157,14 @@ func main() {
 	}()
 
 	wg.Wait()
+}
+
+func roundToBeginningOfDay(t time.Time) time.Time {
+	moscowLocation, err := tools.GetTimeMoscowLocation()
+	if err != nil {
+		log.Error(err)
+	}
+
+	year, month, day := t.Date()
+	return time.Date(year, month, day, 0, 0, 0, 0, moscowLocation)
 }
