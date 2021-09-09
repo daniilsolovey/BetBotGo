@@ -93,12 +93,8 @@ func main() {
 	newOperator := operator.NewOperator(
 		config, database, requester, telegramBot,
 	)
-	newStatistic := statistics.NewStatistics(database)
+	newStatistic := statistics.NewStatistics(database, telegramBot)
 
-	err = newStatistic.GetLiveEventsResultsOnPreviousDateAndWriteToStatistic()
-	if err != nil {
-		log.Fatal(err)
-	}
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
@@ -112,10 +108,9 @@ func main() {
 			beginOfDay := roundToBeginningOfDay(timeNow)
 			waitUntill := beginOfDay.Add(24 * time.Hour)
 			mainWaitingDiff := waitUntill.Sub(timeNow)
-
-			err = newStatistic.GetLiveEventsResultsOnPreviousDateAndWriteToStatistic()
+			err = newStatistic.GetStatisticOnPreviousDayAndNotify()
 			if err != nil {
-				log.Fatal(err)
+				log.Error(err)
 			}
 
 			events, err := newOperator.GetEvents()
