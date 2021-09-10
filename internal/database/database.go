@@ -132,7 +132,8 @@ func (database *Database) InsertEventsForToday(events []requester.EventWithOdds)
 	}
 
 	for _, event := range events {
-		_, err := database.client.Query(
+		log.Infof(nil, "inserting event: %v", event)
+		rows, err := database.client.Query(
 			context.Background(),
 			SQL_INSERT_EVENTS_FOR_TODAY,
 			event.EventID,
@@ -157,6 +158,7 @@ func (database *Database) InsertEventsForToday(events []requester.EventWithOdds)
 				event, event.EventID,
 			)
 		}
+		rows.Close()
 	}
 
 	log.Info("events successfully added")
