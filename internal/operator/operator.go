@@ -94,6 +94,7 @@ func (operator *Operator) RoutineHandleLiveOdds(event requester.EventWithOdds) e
 
 	if timeNow.Before(event.EventStartTime) {
 		diff := event.EventStartTime.Sub(timeNow)
+		log.Warningf(nil, "waiting time for routine: %s ", diff.String())
 		time.Sleep(diff)
 	}
 
@@ -157,12 +158,20 @@ func (operator *Operator) SendMessageAboutWinnerToTelegram(event requester.Event
 }
 
 func (operator *Operator) createLoopForSecondSet(event requester.EventWithOdds) bool {
-	timer := time.NewTimer(SELF_DISTRUCT_ROUTINE_LIVE_EVENT_TIMER)
-	<-timer.C
-	log.Info("timer routine started")
+	startTime, err := tools.GetCurrentMoscowTime()
+	if err != nil {
+		log.Error(err)
+	}
+
+	log.Infof(nil, "routine for second set started, start_time: %s, event: %v", startTime.String(), event)
 	for {
-		if timer.Stop() {
-			log.Info("timer routine stopped")
+		timeNow, err := tools.GetCurrentMoscowTime()
+		if err != nil {
+			log.Error(err)
+		}
+
+		if timeNow.After(startTime.Add(SELF_DISTRUCT_ROUTINE_LIVE_EVENT_TIMER)) {
+			log.Infof(nil, "routine for second set stopped by timeout for event: %v", event)
 			return false
 		}
 
@@ -212,12 +221,21 @@ func (operator *Operator) getResultsOfSecondSet(event requester.EventWithOdds, e
 }
 
 func (operator *Operator) createLoopForGetWinner(event requester.EventWithOdds) bool {
-	timer := time.NewTimer(SELF_DISTRUCT_ROUTINE_LIVE_EVENT_TIMER)
-	<-timer.C
-	log.Info("timer routine started")
+	startTime, err := tools.GetCurrentMoscowTime()
+	if err != nil {
+		log.Error(err)
+	}
+
+	log.Infof(nil, "routine for receivnig winner started, start_time: %s, event: %v", startTime.String(), event)
+
 	for {
-		if timer.Stop() {
-			log.Info("timer routine stopped")
+		timeNow, err := tools.GetCurrentMoscowTime()
+		if err != nil {
+			log.Error(err)
+		}
+
+		if timeNow.After(startTime.Add(SELF_DISTRUCT_ROUTINE_LIVE_EVENT_TIMER)) {
+			log.Infof(nil, "routine for receivnig winner stopped by timeout for event: %v", event)
 			return false
 		}
 
