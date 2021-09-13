@@ -100,51 +100,70 @@ func main() {
 	go func() {
 		log.Info("start cycle with receiving events for today")
 		for {
-			timeNow, err := tools.GetCurrentMoscowTime()
-			if err != nil {
-				log.Error(err)
-			}
+			// timeNow, err := tools.GetCurrentMoscowTime()
+			// if err != nil {
+			// 	log.Error(err)
+			// }
 
-			beginOfDay := roundToBeginningOfDay(timeNow)
-			waitUntill := beginOfDay.Add(24 * time.Hour)
-			mainWaitingDiff := waitUntill.Sub(timeNow)
+			// beginOfDay := roundToBeginningOfDay(timeNow)
+			// waitUntill := beginOfDay.Add(24 * time.Hour)
+			// mainWaitingDiff := waitUntill.Sub(timeNow)
 
+			// if len(events) == 0 {
+			// 	log.Warning("len(events) ", len(events))
+			// 	diff := timeNow.Add(1 * time.Minute).Sub(timeNow)
+			// 	if diff < mainWaitingDiff {
+			// 		time.Sleep(diff)
+			// 	}
+			// 	continue
+			// }
 			events, err := newOperator.GetEvents()
 			if err != nil {
 				log.Error(err)
 			}
 
-			if len(events) == 0 {
-				log.Warning("len(events) ", len(events))
-				diff := timeNow.Add(1 * time.Minute).Sub(timeNow)
-				if diff < mainWaitingDiff {
-					time.Sleep(diff)
-				}
-				continue
-			}
-
-			log.Info("insert events for today to database")
 			err = database.InsertEventsForToday(events)
 			if err != nil {
 				log.Error(err)
 			}
 
-			log.Info("creating routines for each event")
 			err = newOperator.CreateRoutinesForHandleLiveEvents(events)
 			if err != nil {
 				log.Error(err)
 			}
 
-			log.Warning("mainWaitingDiff ", mainWaitingDiff)
-			time.Sleep(mainWaitingDiff)
-			err = newStatistic.GetStatisticOnPreviousDayAndNotify()
-			if err != nil {
-				log.Error(err)
-			}
+			log.Warning("RoutineCache:  ", newOperator.RoutineCache)
+			time.Sleep(5 * time.Minute)
+
+			// log.Warning("mainWaitingDiff ", mainWaitingDiff)
+			// time.Sleep(mainWaitingDiff)
+			// err = newStatistic.GetStatisticOnPreviousDayAndNotify()
+			// if err != nil {
+			// 	log.Error(err)
+			// }
 		}
 	}()
 
 	wg.Add(2)
+	go func() {
+		timeNow, err := tools.GetCurrentMoscowTime()
+		if err != nil {
+			log.Error(err)
+		}
+
+		beginOfDay := roundToBeginningOfDay(timeNow)
+		waitUntill := beginOfDay.Add(24 * time.Hour)
+		mainWaitingDiff := waitUntill.Sub(timeNow)
+
+		log.Warning("mainWaitingDiff ", mainWaitingDiff)
+		time.Sleep(mainWaitingDiff)
+		err = newStatistic.GetStatisticOnPreviousDayAndNotify()
+		if err != nil {
+			log.Error(err)
+		}
+	}()
+
+	wg.Add(3)
 	go func() {
 		telegramBot.Handle("/starttest", newOperator.Start)
 		log.Infof(nil, "starting to listen and serve telegram bot")

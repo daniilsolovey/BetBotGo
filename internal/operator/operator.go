@@ -21,10 +21,12 @@ const (
 )
 
 type Operator struct {
-	config    *config.Config
-	database  *database.Database
-	requester requester.RequesterInterface
-	transport transport.Transport
+	config                     *config.Config
+	database                   *database.Database
+	requester                  requester.RequesterInterface
+	transport                  transport.Transport
+	RoutineCache               []string
+	allEventsOnCurrentDayCache []string
 }
 
 func NewOperator(
@@ -41,7 +43,52 @@ func NewOperator(
 	}
 }
 
+func (operator *Operator) AddEventsIDsOnCurrentDayToCache(events []requester.EventWithOdds) {
+	for _, event := range events {
+		if len(operator.allEventsOnCurrentDayCache) != 0 &&
+			!operator.IsAllEventsCacheContainsEvent(event.EventID) {
+			operator.allEventsOnCurrentDayCache = append(
+				operator.allEventsOnCurrentDayCache,
+				event.EventID,
+			)
+		}
+	}
+}
+
+func (operator *Operator) AddEventsIDsAboutCreatedRoutines(events []requester.EventWithOdds) {
+	for _, event := range events {
+		if len(operator.RoutineCache) != 0 &&
+			!operator.IsRoutineCacheContainsEvent(event.EventID) {
+			operator.RoutineCache = append(
+				operator.RoutineCache,
+				event.EventID,
+			)
+		}
+	}
+}
+
+func (operator *Operator) IsRoutineCacheContainsEvent(eventID string) bool {
+	for _, value := range operator.RoutineCache {
+		if eventID == value {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (operator *Operator) IsAllEventsCacheContainsEvent(eventID string) bool {
+	for _, value := range operator.allEventsOnCurrentDayCache {
+		if eventID == value {
+			return true
+		}
+	}
+
+	return false
+}
+
 func (operator *Operator) GetEvents() ([]requester.EventWithOdds, error) {
+	log.Info("receiving events for today")
 	upcomingEvents, err := operator.requester.GetUpcomingEvents()
 	if err != nil {
 		return nil, karma.Format(
@@ -104,6 +151,12 @@ func (operator *Operator) SendMessageAboutWinnerToTelegram(event requester.Event
 }
 
 func (operator *Operator) CreateRoutinesForHandleLiveEvents(events []requester.EventWithOdds) error {
+	if len(events) == 0 {
+		return nil
+	}
+
+	log.Info("creating routines for each event")
+
 	timeNow, err := tools.GetCurrentMoscowTime()
 	if err != nil {
 		return karma.Format(
@@ -113,8 +166,12 @@ func (operator *Operator) CreateRoutinesForHandleLiveEvents(events []requester.E
 	}
 
 	for _, event := range events {
-		if event.EventStartTime.After(timeNow) || event.EventStartTime.Before(event.EventStartTime.Add(MONITORING_LIVE_EVENT_TIME_DELAY)) {
+		if event.EventStartTime.After(timeNow) ||
+			event.EventStartTime.Before(event.EventStartTime.Add(MONITORING_LIVE_EVENT_TIME_DELAY)) &&
+				!operator.IsRoutineCacheContainsEvent(event.EventID) {
 			go operator.routineStartHandleLiveOdds(event)
+			eventForCache := []requester.EventWithOdds{event}
+			operator.AddEventsIDsAboutCreatedRoutines(eventForCache)
 		}
 	}
 
