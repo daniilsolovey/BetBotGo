@@ -108,10 +108,6 @@ func main() {
 			beginOfDay := roundToBeginningOfDay(timeNow)
 			waitUntill := beginOfDay.Add(24 * time.Hour)
 			mainWaitingDiff := waitUntill.Sub(timeNow)
-			err = newStatistic.GetStatisticOnPreviousDayAndNotify()
-			if err != nil {
-				log.Error(err)
-			}
 
 			events, err := newOperator.GetEvents()
 			if err != nil {
@@ -141,6 +137,10 @@ func main() {
 
 			log.Warning("mainWaitingDiff ", mainWaitingDiff)
 			time.Sleep(mainWaitingDiff)
+			err = newStatistic.GetStatisticOnPreviousDayAndNotify()
+			if err != nil {
+				log.Error(err)
+			}
 		}
 	}()
 
