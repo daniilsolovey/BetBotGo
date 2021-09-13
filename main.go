@@ -134,7 +134,7 @@ func main() {
 			}
 
 			log.Info("creating routines for each event")
-			err = newOperator.CreateRoutinesForEachEvent(events)
+			err = newOperator.CreateRoutinesForHandleLiveEvents(events)
 			if err != nil {
 				log.Error(err)
 			}
