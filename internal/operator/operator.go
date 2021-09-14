@@ -185,6 +185,12 @@ func (operator *Operator) routineFinalHandleLiveOdds(event requester.EventWithOd
 		winner := getWinnerInSecondSet(setData)
 		liveEvent.WinnerInSecondSet = winner
 		//write to database result of second set
+		liveEvent.EventID = event.EventID
+		liveEvent.League.Name = event.League.Name
+		liveEvent.HomeCommandName = event.HomeCommandName
+		liveEvent.AwayCommandName = event.AwayCommandName
+		liveEvent.Favorite = event.Favorite
+
 		err := operator.database.UpdateLiveEventsResultsScoreAndWinnerFields(liveEvent)
 		if err != nil {
 			log.Error(err)
@@ -212,6 +218,11 @@ func (operator *Operator) routineStartHandleLiveOdds(event requester.EventWithOd
 
 	liveEvent, liveEventResult := operator.createHandlerLiveOdds(event)
 	if liveEventResult {
+		liveEvent.EventID = event.EventID
+		liveEvent.League.Name = event.League.Name
+		liveEvent.HomeCommandName = event.HomeCommandName
+		liveEvent.AwayCommandName = event.AwayCommandName
+		liveEvent.Favorite = event.Favorite
 		err := operator.SendMessageAboutWinnerToTelegram(liveEvent)
 		if err != nil {
 			log.Error(err)
