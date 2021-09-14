@@ -252,11 +252,12 @@ func (operator *Operator) createHandlerLiveOdds(event requester.EventWithOdds) (
 			return requester.EventWithOdds{}, false
 		}
 
-		log.Infof(nil, "handle live odds for event: %v", event)
 		liveEvent, err := operator.requester.GetLiveEventByID(event.EventID)
 		if err != nil {
 			log.Errorf(err, "unable to get live event data by event_id: %s", event.EventID)
 		}
+
+		log.Infof(nil, "handle live odds for event: %v", *liveEvent)
 
 		liveEventResult := operator.getWinner(*liveEvent, 0)
 		switch liveEventResult {
@@ -291,11 +292,12 @@ func (operator *Operator) createHandlerFinalOdds(event requester.EventWithOdds) 
 			return requester.EventWithOdds{}, false
 		}
 
-		log.Infof(nil, "handle live odds for event_id: %s", event.EventID)
 		liveEvent, err := operator.requester.GetLiveEventByID(event.EventID)
 		if err != nil {
 			log.Errorf(err, "unable to get live event data by event_id: %s", event.EventID)
 		}
+
+		log.Infof(nil, "handle final live odds for event: %v", *liveEvent)
 
 		liveEventResult := operator.getResultsOfSecondSet(*liveEvent, 0)
 		switch liveEventResult {
