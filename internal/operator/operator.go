@@ -45,8 +45,7 @@ func NewOperator(
 
 func (operator *Operator) AddEventsIDsOnCurrentDayToCache(events []requester.EventWithOdds) {
 	for _, event := range events {
-		if len(operator.allEventsOnCurrentDayCache) != 0 &&
-			!operator.IsAllEventsCacheContainsEvent(event.EventID) {
+		if !operator.IsAllEventsCacheContainsEvent(event.EventID) {
 			operator.allEventsOnCurrentDayCache = append(
 				operator.allEventsOnCurrentDayCache,
 				event.EventID,
@@ -57,8 +56,7 @@ func (operator *Operator) AddEventsIDsOnCurrentDayToCache(events []requester.Eve
 
 func (operator *Operator) AddEventsIDsAboutCreatedRoutines(events []requester.EventWithOdds) {
 	for _, event := range events {
-		if len(operator.RoutineCache) != 0 &&
-			!operator.IsRoutineCacheContainsEvent(event.EventID) {
+		if !operator.IsRoutineCacheContainsEvent(event.EventID) {
 			operator.RoutineCache = append(
 				operator.RoutineCache,
 				event.EventID,
@@ -156,7 +154,6 @@ func (operator *Operator) CreateRoutinesForHandleLiveEvents(events []requester.E
 	}
 
 	log.Info("creating routines for each event")
-
 	timeNow, err := tools.GetCurrentMoscowTime()
 	if err != nil {
 		return karma.Format(
@@ -167,11 +164,14 @@ func (operator *Operator) CreateRoutinesForHandleLiveEvents(events []requester.E
 
 	for _, event := range events {
 		if event.EventStartTime.After(timeNow) ||
-			event.EventStartTime.Before(event.EventStartTime.Add(MONITORING_LIVE_EVENT_TIME_DELAY)) &&
-				!operator.IsRoutineCacheContainsEvent(event.EventID) {
-			go operator.routineStartHandleLiveOdds(event)
-			eventForCache := []requester.EventWithOdds{event}
-			operator.AddEventsIDsAboutCreatedRoutines(eventForCache)
+			event.EventStartTime.Before(event.EventStartTime.Add(MONITORING_LIVE_EVENT_TIME_DELAY)) {
+			if !operator.IsRoutineCacheContainsEvent(event.EventID) {
+				go operator.routineStartHandleLiveOdds(event)
+				eventForCache := []requester.EventWithOdds{event}
+				operator.AddEventsIDsAboutCreatedRoutines(eventForCache)
+			} else {
+				log.Infof(nil, "routine for event created before, event_id: %s", event.EventID)
+			}
 		}
 	}
 

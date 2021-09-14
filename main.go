@@ -34,6 +34,10 @@ Options:
   -h --help                         Show this help.
 `
 
+const (
+	RECEIVING_EVENTS_DURATION = 5 * time.Minute
+)
+
 func main() {
 	args, err := docopt.ParseArgs(
 		usage,
@@ -100,23 +104,6 @@ func main() {
 	go func() {
 		log.Info("start cycle with receiving events for today")
 		for {
-			// timeNow, err := tools.GetCurrentMoscowTime()
-			// if err != nil {
-			// 	log.Error(err)
-			// }
-
-			// beginOfDay := roundToBeginningOfDay(timeNow)
-			// waitUntill := beginOfDay.Add(24 * time.Hour)
-			// mainWaitingDiff := waitUntill.Sub(timeNow)
-
-			// if len(events) == 0 {
-			// 	log.Warning("len(events) ", len(events))
-			// 	diff := timeNow.Add(1 * time.Minute).Sub(timeNow)
-			// 	if diff < mainWaitingDiff {
-			// 		time.Sleep(diff)
-			// 	}
-			// 	continue
-			// }
 			events, err := newOperator.GetEvents()
 			if err != nil {
 				log.Error(err)
@@ -132,34 +119,30 @@ func main() {
 				log.Error(err)
 			}
 
-			log.Warning("RoutineCache:  ", newOperator.RoutineCache)
-			time.Sleep(5 * time.Minute)
+			time.Sleep(RECEIVING_EVENTS_DURATION)
 
-			// log.Warning("mainWaitingDiff ", mainWaitingDiff)
-			// time.Sleep(mainWaitingDiff)
-			// err = newStatistic.GetStatisticOnPreviousDayAndNotify()
-			// if err != nil {
-			// 	log.Error(err)
-			// }
 		}
 	}()
 
 	wg.Add(2)
 	go func() {
-		timeNow, err := tools.GetCurrentMoscowTime()
-		if err != nil {
-			log.Error(err)
-		}
+		log.Info("start cycle with receiving statistic on previous day")
+		for {
+			timeNow, err := tools.GetCurrentMoscowTime()
+			if err != nil {
+				log.Error(err)
+			}
 
-		beginOfDay := roundToBeginningOfDay(timeNow)
-		waitUntill := beginOfDay.Add(24 * time.Hour)
-		mainWaitingDiff := waitUntill.Sub(timeNow)
+			beginOfDay := roundToBeginningOfDay(timeNow)
+			waitUntill := beginOfDay.Add(24 * time.Hour)
+			waitingTime := waitUntill.Sub(timeNow)
 
-		log.Warning("mainWaitingDiff ", mainWaitingDiff)
-		time.Sleep(mainWaitingDiff)
-		err = newStatistic.GetStatisticOnPreviousDayAndNotify()
-		if err != nil {
-			log.Error(err)
+			log.Warning("waiting for statistic on previous day: ", waitingTime)
+			time.Sleep(waitingTime)
+			err = newStatistic.GetStatisticOnPreviousDayAndNotify()
+			if err != nil {
+				log.Error(err)
+			}
 		}
 	}()
 
