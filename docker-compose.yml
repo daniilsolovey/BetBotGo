@@ -2,16 +2,16 @@
 # services:
 #   postgres:
 #     image: postgres:latest
-#     container_name: composepostgres
+#     container_name: betbot-postgres-db
 #     environment:
 #       POSTGRES_PASSWORD: "admin"
 #       POSTGRES_USER: "postgres"
-#       POSTGRES_DB: "database_name"
+#       POSTGRES_DB: "bet_bot_go"
 #     ports:
-#       - "5433:5432"
+#       - "5432:5432"
 #     restart: always
 #   app:
-#     build: .
+#     build: BetBotGo
 #     depends_on:
 #       - postgres
 #     ports:

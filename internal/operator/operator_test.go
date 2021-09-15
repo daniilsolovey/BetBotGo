@@ -174,6 +174,7 @@ func TestOperator_getWinner_ReturnWinnerResult(
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	eventsWithOdds[1].EventID = "4009234"
 	// eventsWithOdds[1].ResultEventWithOdds.Odds.Odds91_1[0].SS = "17-25,25-21"
 	// eventsWithOdds[1].ResultEventWithOdds.Odds.Odds91_1[0].HomeOd = "1.67"

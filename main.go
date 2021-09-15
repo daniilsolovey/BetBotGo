@@ -34,6 +34,10 @@ Options:
   -h --help                         Show this help.
 `
 
+const (
+	RECEIVING_EVENTS_DURATION = 5 * time.Minute
+)
+
 func main() {
 	args, err := docopt.ParseArgs(
 		usage,
@@ -100,6 +104,30 @@ func main() {
 	go func() {
 		log.Info("start cycle with receiving events for today")
 		for {
+			events, err := newOperator.GetEvents()
+			if err != nil {
+				log.Error(err)
+			}
+
+			err = database.InsertEventsForToday(events)
+			if err != nil {
+				log.Error(err)
+			}
+
+			err = newOperator.CreateRoutinesForHandleLiveEvents(events)
+			if err != nil {
+				log.Error(err)
+			}
+
+			time.Sleep(RECEIVING_EVENTS_DURATION)
+
+		}
+	}()
+
+	wg.Add(2)
+	go func() {
+		log.Info("start cycle with receiving statistic on previous day")
+		for {
 			timeNow, err := tools.GetCurrentMoscowTime()
 			if err != nil {
 				log.Error(err)
@@ -107,44 +135,18 @@ func main() {
 
 			beginOfDay := roundToBeginningOfDay(timeNow)
 			waitUntill := beginOfDay.Add(24 * time.Hour)
-			mainWaitingDiff := waitUntill.Sub(timeNow)
+			waitingTime := waitUntill.Sub(timeNow)
+
+			log.Warning("waiting for statistic on previous day: ", waitingTime)
+			time.Sleep(waitingTime)
 			err = newStatistic.GetStatisticOnPreviousDayAndNotify()
 			if err != nil {
 				log.Error(err)
 			}
-
-			events, err := newOperator.GetEvents()
-			if err != nil {
-				log.Error(err)
-			}
-
-			if len(events) == 0 {
-				log.Warning("len(events) ", len(events))
-				diff := timeNow.Add(1 * time.Minute).Sub(timeNow)
-				if diff < mainWaitingDiff {
-					time.Sleep(diff)
-				}
-				continue
-			}
-
-			log.Info("insert events for today to database")
-			err = database.InsertEventsForToday(events)
-			if err != nil {
-				log.Error(err)
-			}
-
-			log.Info("creating routines for each event")
-			err = newOperator.CreateRoutinesForEachEvent(events)
-			if err != nil {
-				log.Error(err)
-			}
-
-			log.Warning("mainWaitingDiff ", mainWaitingDiff)
-			time.Sleep(mainWaitingDiff)
 		}
 	}()
 
-	wg.Add(2)
+	wg.Add(3)
 	go func() {
 		telegramBot.Handle("/starttest", newOperator.Start)
 		log.Infof(nil, "starting to listen and serve telegram bot")
