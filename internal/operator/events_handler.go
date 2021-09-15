@@ -112,7 +112,7 @@ func convertStringToFloat(data string) (float64, error) {
 	return result, nil
 }
 
-func handleLiveEventOdds(event *requester.EventWithOdds) (bool, int, error) {
+func handleLiveEventOdds(event requester.EventWithOdds) (bool, int, error) {
 	//not tested:
 	if reflect.DeepEqual(event.ResultEventWithOdds.Odds, requester.Odds{}) {
 		return false, 0, errors.New("event.ResultEventWithOdds.Odds is empty")
