@@ -6,11 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/daniilsolovey/BetBotGo/internal/constants"
+	"github.com/alecthomas/assert"
 	"github.com/daniilsolovey/BetBotGo/internal/requester"
 	"github.com/daniilsolovey/BetBotGo/internal/tools"
 	"github.com/reconquest/karma-go"
-	"github.com/reconquest/pkg/assert"
 	"github.com/reconquest/pkg/log"
 )
 
@@ -152,33 +151,144 @@ func TestOperator_GetEvents_ReturnWinnerResult(
 	if err != nil {
 		log.Fatal(err)
 	}
-	assert.NotNil(events, "")
+
+	assert.NotNil(t, events, "")
 }
 
-func TestOperator_getWinner_ReturnWinnerResult(
+func TestOperator_handleLiveEventOdds_ReturnWinnerResult(
 	t *testing.T,
 ) {
 	tools.TimeNow = func() time.Time {
 		return time.Date(2021, 9, 03, 16, 0, 0, 0, time.UTC)
 	}
 
-	testRequester := createRequester()
-	operator := NewOperator(nil, nil, testRequester, nil)
+	// testRequester := createRequester()
+	// operator := NewOperator(nil, nil, testRequester, nil)
 
-	upcomingEvents, err := testRequester.GetUpcomingEvents()
+	event := requester.EventWithOdds{
+		EventID:             "1111",
+		Favorite:            "away",
+		ResultEventWithOdds: requester.ResultEventWithOdds{Odds: requester.Odds{Odds91_1: []requester.OddsNumber{requester.OddsNumber{}}}},
+	}
+
+	event.ResultEventWithOdds.Odds.Odds91_1[0].HomeOd = "1.533"
+	event.ResultEventWithOdds.Odds.Odds91_1[0].AwayOd = "2"
+	event.ResultEventWithOdds.Odds.Odds91_1[0].SS = "27-11,1-3"
+
+	result, numberOfset, err := handleLiveEventOdds(event)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	eventsWithOdds, err := testRequester.GetEventOddsByEventIDs(upcomingEvents)
+	assert.Equal(t, result, true)
+	assert.Equal(t, numberOfset, 2)
+
+	event = requester.EventWithOdds{
+		EventID:             "2222",
+		Favorite:            "home",
+		ResultEventWithOdds: requester.ResultEventWithOdds{Odds: requester.Odds{Odds91_1: []requester.OddsNumber{requester.OddsNumber{}}}},
+	}
+
+	event.ResultEventWithOdds.Odds.Odds91_1[0].HomeOd = "1.533"
+	event.ResultEventWithOdds.Odds.Odds91_1[0].AwayOd = "2"
+	event.ResultEventWithOdds.Odds.Odds91_1[0].SS = "27-11,1-3"
+
+	result, numberOfset, err = handleLiveEventOdds(event)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	eventsWithOdds[1].EventID = "4009234"
-	// eventsWithOdds[1].ResultEventWithOdds.Odds.Odds91_1[0].SS = "17-25,25-21"
-	// eventsWithOdds[1].ResultEventWithOdds.Odds.Odds91_1[0].HomeOd = "1.67"
-	eventsWithOdds[1].Favorite = constants.FAVORITE_IS_HOME
-	result := operator.getWinner(eventsWithOdds[1], 0)
-	log.Warning("result ", result)
+	assert.Equal(t, result, false)
+	assert.Equal(t, numberOfset, 0)
+
+	event = requester.EventWithOdds{
+		EventID:             "3333",
+		Favorite:            "home",
+		ResultEventWithOdds: requester.ResultEventWithOdds{Odds: requester.Odds{Odds91_1: []requester.OddsNumber{requester.OddsNumber{}}}},
+	}
+
+	event.ResultEventWithOdds.Odds.Odds91_1[0].HomeOd = "1.433"
+	event.ResultEventWithOdds.Odds.Odds91_1[0].AwayOd = "2"
+	event.ResultEventWithOdds.Odds.Odds91_1[0].SS = "27-11,1-3"
+
+	result, numberOfset, err = handleLiveEventOdds(event)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	assert.Equal(t, result, false)
+	assert.Equal(t, numberOfset, 0)
+
+	event = requester.EventWithOdds{
+		EventID:             "3333",
+		Favorite:            "home",
+		ResultEventWithOdds: requester.ResultEventWithOdds{Odds: requester.Odds{Odds91_1: []requester.OddsNumber{requester.OddsNumber{}}}},
+	}
+
+	event.ResultEventWithOdds.Odds.Odds91_1[0].HomeOd = "1.52"
+	event.ResultEventWithOdds.Odds.Odds91_1[0].AwayOd = "2"
+	event.ResultEventWithOdds.Odds.Odds91_1[0].SS = "27-11,1-3"
+
+	result, numberOfset, err = handleLiveEventOdds(event)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	assert.Equal(t, result, false)
+	assert.Equal(t, numberOfset, 0)
+
+	event = requester.EventWithOdds{
+		EventID:             "4444",
+		Favorite:            "home",
+		ResultEventWithOdds: requester.ResultEventWithOdds{Odds: requester.Odds{Odds91_1: []requester.OddsNumber{requester.OddsNumber{}}}},
+	}
+
+	event.ResultEventWithOdds.Odds.Odds91_1[0].HomeOd = "1.52"
+	event.ResultEventWithOdds.Odds.Odds91_1[0].AwayOd = "2"
+	event.ResultEventWithOdds.Odds.Odds91_1[0].SS = "27-31,1-3"
+
+	result, numberOfset, err = handleLiveEventOdds(event)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	assert.Equal(t, result, true)
+	assert.Equal(t, numberOfset, 2)
+
+	event = requester.EventWithOdds{
+		EventID:             "5555",
+		Favorite:            "away",
+		ResultEventWithOdds: requester.ResultEventWithOdds{Odds: requester.Odds{Odds91_1: []requester.OddsNumber{requester.OddsNumber{}}}},
+	}
+
+	event.ResultEventWithOdds.Odds.Odds91_1[0].HomeOd = "1.52"
+	event.ResultEventWithOdds.Odds.Odds91_1[0].AwayOd = "2"
+	event.ResultEventWithOdds.Odds.Odds91_1[0].SS = "27-31,1-3"
+
+	result, numberOfset, err = handleLiveEventOdds(event)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	assert.Equal(t, result, false)
+	assert.Equal(t, numberOfset, 0)
+
+	event = requester.EventWithOdds{
+		EventID:             "5555",
+		Favorite:            "away",
+		ResultEventWithOdds: requester.ResultEventWithOdds{Odds: requester.Odds{Odds91_1: []requester.OddsNumber{requester.OddsNumber{}}}},
+	}
+
+	event.ResultEventWithOdds.Odds.Odds91_1[0].HomeOd = "1.52"
+	event.ResultEventWithOdds.Odds.Odds91_1[0].AwayOd = "2"
+	event.ResultEventWithOdds.Odds.Odds91_1[0].SS = "30-21,1-3"
+
+	result, numberOfset, err = handleLiveEventOdds(event)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	assert.Equal(t, result, true)
+	assert.Equal(t, numberOfset, 2)
+
 }

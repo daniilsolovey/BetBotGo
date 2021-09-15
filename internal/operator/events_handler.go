@@ -136,7 +136,7 @@ func handleLiveEventOdds(event requester.EventWithOdds) (bool, int, error) {
 		return false, 0, err
 	}
 
-	awayOdd, err := convertStringToFloat(event.ResultEventWithOdds.Odds.Odds91_1[0].HomeOd)
+	awayOdd, err := convertStringToFloat(event.ResultEventWithOdds.Odds.Odds91_1[0].AwayOd)
 	if err != nil {
 		return false, 0, err
 	}
@@ -155,7 +155,7 @@ func handleLiveEventOdds(event requester.EventWithOdds) (bool, int, error) {
 	}
 
 	if event.Favorite != winner && getNumberOfSet(setData) == 2 && mainOdd > 1.5 {
-		return true, 0, nil
+		return true, 2, nil
 	}
 
 	if getNumberOfSet(setData) == 3 {
