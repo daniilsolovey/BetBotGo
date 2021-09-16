@@ -146,6 +146,14 @@ func (database *Database) InsertEventsForToday(events []requester.EventWithOdds)
 			event.HomeOdd,
 			event.AwayOdd,
 		)
+		if rows.Err() != nil {
+			return karma.Format(
+				err,
+				"error with rows unable to add event to the database,"+
+					" event: %v, event_id: %s",
+			)
+		}
+
 		if err != nil {
 			if strings.Contains(err.Error(), "ERROR: duplicate key value violates unique constraint") {
 				continue
