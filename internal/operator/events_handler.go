@@ -154,15 +154,16 @@ func handleLiveEventOdds(event requester.EventWithOdds) (bool, int, error) {
 		return false, 0, nil
 	}
 
-	if event.Favorite != winner && getNumberOfSet(setData) == 2 && mainOdd > 1.5 {
-		return true, 2, nil
-	}
-
 	if getNumberOfSet(setData) == 3 {
 		return false, 3, nil
 	}
 
-	return false, 0, nil
+	if event.Favorite != winner && getNumberOfSet(setData) == 2 && mainOdd > 1.5 {
+		return true, 2, nil
+	} else {
+		return false, 2, nil
+	}
+
 }
 
 func getWinnerInFirstSet(setData string) string {

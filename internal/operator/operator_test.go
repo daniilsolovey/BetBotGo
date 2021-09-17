@@ -126,6 +126,7 @@ func (testRequester *TestRequester) GetLiveEventByID(eventID string) (*requester
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	for _, event := range events {
 		log.Warning("event.Id ", event.EventID)
 		if event.EventID == eventID {
@@ -199,7 +200,7 @@ func TestOperator_handleLiveEventOdds_ReturnWinnerResult(
 	}
 
 	assert.Equal(t, result, false)
-	assert.Equal(t, numberOfset, 0)
+	assert.Equal(t, numberOfset, 2)
 
 	event = requester.EventWithOdds{
 		EventID:             "3333",
@@ -217,7 +218,7 @@ func TestOperator_handleLiveEventOdds_ReturnWinnerResult(
 	}
 
 	assert.Equal(t, result, false)
-	assert.Equal(t, numberOfset, 0)
+	assert.Equal(t, numberOfset, 2)
 
 	event = requester.EventWithOdds{
 		EventID:             "3333",
@@ -235,7 +236,7 @@ func TestOperator_handleLiveEventOdds_ReturnWinnerResult(
 	}
 
 	assert.Equal(t, result, false)
-	assert.Equal(t, numberOfset, 0)
+	assert.Equal(t, numberOfset, 2)
 
 	event = requester.EventWithOdds{
 		EventID:             "4444",
@@ -271,10 +272,10 @@ func TestOperator_handleLiveEventOdds_ReturnWinnerResult(
 	}
 
 	assert.Equal(t, result, false)
-	assert.Equal(t, numberOfset, 0)
+	assert.Equal(t, numberOfset, 2)
 
 	event = requester.EventWithOdds{
-		EventID:             "5555",
+		EventID:             "6666",
 		Favorite:            "away",
 		ResultEventWithOdds: requester.ResultEventWithOdds{Odds: requester.Odds{Odds91_1: []requester.OddsNumber{requester.OddsNumber{}}}},
 	}
@@ -289,6 +290,42 @@ func TestOperator_handleLiveEventOdds_ReturnWinnerResult(
 	}
 
 	assert.Equal(t, result, true)
+	assert.Equal(t, numberOfset, 2)
+
+	event = requester.EventWithOdds{
+		EventID:             "7777",
+		Favorite:            "home",
+		ResultEventWithOdds: requester.ResultEventWithOdds{Odds: requester.Odds{Odds91_1: []requester.OddsNumber{requester.OddsNumber{}}}},
+	}
+
+	event.ResultEventWithOdds.Odds.Odds91_1[0].HomeOd = "1.52"
+	event.ResultEventWithOdds.Odds.Odds91_1[0].AwayOd = "2"
+	event.ResultEventWithOdds.Odds.Odds91_1[0].SS = "25-18,0-0"
+
+	result, numberOfset, err = handleLiveEventOdds(event)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	assert.Equal(t, result, false)
+	assert.Equal(t, numberOfset, 2)
+
+	event = requester.EventWithOdds{
+		EventID:             "8888",
+		Favorite:            "away",
+		ResultEventWithOdds: requester.ResultEventWithOdds{Odds: requester.Odds{Odds91_1: []requester.OddsNumber{requester.OddsNumber{}}}},
+	}
+
+	event.ResultEventWithOdds.Odds.Odds91_1[0].HomeOd = "1.025"
+	event.ResultEventWithOdds.Odds.Odds91_1[0].AwayOd = "10.500"
+	event.ResultEventWithOdds.Odds.Odds91_1[0].SS = "17-25,0-0"
+
+	result, numberOfset, err = handleLiveEventOdds(event)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	assert.Equal(t, result, false)
 	assert.Equal(t, numberOfset, 2)
 
 }
