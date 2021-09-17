@@ -146,12 +146,9 @@ func main() {
 		}
 	}()
 
-	wg.Add(3)
-	go func() {
-		telegramBot.Handle("/starttest", newOperator.Start)
-		log.Infof(nil, "starting to listen and serve telegram bot")
-		bot.Start()
-	}()
+	telegramBot.Handle("/starttest", newOperator.Start)
+	log.Infof(nil, "starting to listen and serve telegram bot")
+	bot.Start()
 
 	wg.Wait()
 }
