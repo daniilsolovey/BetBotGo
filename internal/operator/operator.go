@@ -268,7 +268,7 @@ func (operator *Operator) createHandlerLiveOdds(event requester.EventWithOdds) (
 			log.Errorf(err, "unable to get live event data by event_id: %s", event.EventID)
 		}
 
-		log.Infof(nil, "handle live odds for event: %v", *liveEvent)
+		log.Infof(nil, "handle live odds for event: %v", liveEvent)
 
 		liveEventResult := operator.getWinner(*liveEvent, 0)
 		switch liveEventResult {
