@@ -329,25 +329,13 @@ func (operator *Operator) createHandlerFinalOdds(event requester.EventWithOdds) 
 }
 
 func (operator *Operator) getResultsOfSecondSet(liveEvent requester.EventWithOdds, errCount int) string {
-	// log.Infof(nil, "handle live odds for event: %v", event)
-	// liveEvent, err := operator.requester.GetLiveEventByID(event.EventID)
-	// if err != nil {
-	// 	if errCount < MAX_ERROR_COUNT_IN_MONITORING_LIVE_EVENTS {
-	// 		log.Errorf(err, "unable to get live event data by event_id: %s", event.EventID)
-	// 		errCount = +1
-	// 		time.Sleep(2 * time.Second)
-	// 	} else {
-	// 		// break
-	// 		return "finished with error"
-	// 	}
-	// }
-
 	_, numberOfSet, err := handleLiveEventOdds(liveEvent)
 	if err != nil {
 		if errCount < MAX_ERROR_COUNT_IN_MONITORING_LIVE_EVENTS {
-			log.Errorf(err, "unable to handle live event event_id: %s", liveEvent.EventID)
+			log.Errorf(err, "unable to handle live results of second set event_id: %s", &liveEvent.EventID)
 			errCount = +1
-			time.Sleep(2 * time.Second)
+			time.Sleep(10 * time.Second)
+			return ""
 		} else {
 			return "finished with error"
 		}
@@ -361,25 +349,13 @@ func (operator *Operator) getResultsOfSecondSet(liveEvent requester.EventWithOdd
 }
 
 func (operator *Operator) getWinner(liveEvent requester.EventWithOdds, errCount int) string {
-	// log.Infof(nil, "handle live odds for event: %v", event)
-	// liveEvent, err := operator.requester.GetLiveEventByID(event.EventID)
-	// if err != nil {
-	// 	if errCount < MAX_ERROR_COUNT_IN_MONITORING_LIVE_EVENTS {
-	// 		log.Errorf(err, "unable to get live event data by event_id: %s", event.EventID)
-	// 		errCount = +1
-	// 		time.Sleep(2 * time.Second)
-	// 	} else {
-	// 		// break
-	// 		return "finished with error"
-	// 	}
-	// }
-
 	liveEventResult, numberOfSet, err := handleLiveEventOdds(liveEvent)
 	if err != nil {
 		if errCount < MAX_ERROR_COUNT_IN_MONITORING_LIVE_EVENTS {
-			log.Errorf(err, "unable to handle live event event_id: %s", liveEvent.EventID)
+			log.Errorf(err, "unable to handle live event and receive winner event_id: %s", &liveEvent.EventID)
 			errCount = +1
 			time.Sleep(10 * time.Second)
+			return ""
 		} else {
 			return "finished with error"
 		}
