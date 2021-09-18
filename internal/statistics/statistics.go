@@ -41,7 +41,7 @@ func NewStatistics(
 }
 
 func (statistics *Statistics) GetStatisticOnPreviousDayAndNotify() error {
-	events, err := statistics.GetLiveEventsResultsOnPreviousDateAndWriteToStatistic()
+	events, err := statistics.getLiveEventsResultsOnPreviousDateAndWriteToStatistic()
 	if err != nil {
 		return karma.Format(
 			err,
@@ -68,7 +68,7 @@ func (statistics *Statistics) GetStatisticOnPreviousDayAndNotify() error {
 	return nil
 }
 
-func (statistics *Statistics) GetLiveEventsResultsOnPreviousDateAndWriteToStatistic() (
+func (statistics *Statistics) getLiveEventsResultsOnPreviousDateAndWriteToStatistic() (
 	[]requester.LiveEventResult,
 	error,
 ) {

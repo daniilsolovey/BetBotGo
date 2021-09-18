@@ -150,7 +150,8 @@ func (database *Database) InsertEventsForToday(events []requester.EventWithOdds)
 			return karma.Format(
 				err,
 				"error with rows unable to add event to the database,"+
-					" event: %v, event_id: %s",
+					" event: %v",
+				event,
 			)
 		}
 
