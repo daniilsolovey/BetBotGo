@@ -12,7 +12,12 @@ import (
 )
 
 const (
+	PLAYER_IS_WIN                   = "true"
 	TEXT_STATISTICS_ON_PREVIOUS_DAY = "Результаты за вчера:\n" +
+		"  win: %d\n" +
+		"  lose: %d\n" +
+		"  average odd: %f\n"
+	TEXT_STATISTICS_ON_PREVIOUS_WEEK = "Результаты за прошлую неделю:\n" +
 		"  win: %d\n" +
 		"  lose: %d\n" +
 		"  average odd: %f\n"
@@ -61,7 +66,35 @@ func (statistics *Statistics) GetStatisticOnPreviousDayAndNotify() error {
 	if err != nil {
 		return karma.Format(
 			err,
-			"unable to send statistic on current date to telegram",
+			"unable to send statistic on previous day to telegram",
+		)
+	}
+
+	return nil
+}
+
+func (statistics *Statistics) GetStatisticOnPreviousWeekAndNotify() error {
+	results, err := statistics.database.GetStatisticOnPreviousWeek()
+	if err != nil {
+		return karma.Format(
+			err,
+			"unable to get statistic results on previous week",
+		)
+	}
+
+	handledResults := handleResultsOfPreviousWeek(results)
+	text := fmt.Sprintf(
+		TEXT_STATISTICS_ON_PREVIOUS_WEEK,
+		handledResults.Win,
+		handledResults.Lose,
+		handledResults.AverageOdd,
+	)
+
+	err = statistics.transport.SendMessage(operator.TEMP_RECIPIENT, text)
+	if err != nil {
+		return karma.Format(
+			err,
+			"unable to send statistic on previous day to telegram",
 		)
 	}
 
@@ -76,7 +109,7 @@ func (statistics *Statistics) getLiveEventsResultsOnPreviousDateAndWriteToStatis
 	if err != nil {
 		return nil, karma.Format(
 			err,
-			"unable to get live events results on current date",
+			"unable to get live events results on previous day",
 		)
 	}
 
@@ -84,11 +117,26 @@ func (statistics *Statistics) getLiveEventsResultsOnPreviousDateAndWriteToStatis
 	if err != nil {
 		return nil, karma.Format(
 			err,
-			"unable to insert events results on current date",
+			"unable to insert events results on previous day",
 		)
 	}
 
 	return events, nil
+}
+
+func handleResultsOfPreviousWeek(
+	data []database.StatisticResultOfPreviousDay,
+) ResultOfPreviousDay {
+	var result ResultOfPreviousDay
+	for _, item := range data {
+		if item.PlayerIsWin == PLAYER_IS_WIN {
+			result.Win = result.Win + 1
+		} else {
+			result.Lose = result.Lose + 1
+		}
+	}
+
+	return result
 }
 
 func handleResultsOfPreviousDay(

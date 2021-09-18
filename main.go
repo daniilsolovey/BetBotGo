@@ -146,6 +146,31 @@ func main() {
 		}
 	}()
 
+	wg.Add(3)
+	go func() {
+		log.Info("start cycle with receiving statistic on previous week")
+		for {
+			timeNow, err := tools.GetCurrentMoscowTime()
+			if err != nil {
+				log.Error(err)
+			}
+
+			beginOfDay := roundToBeginningOfDay(timeNow)
+			waitUntill := beginOfDay.Add(24 * time.Hour)
+			waitingTime := waitUntill.Sub(timeNow)
+
+			weekday := time.Now().Weekday()
+			if weekday == time.Monday {
+				err = newStatistic.GetStatisticOnPreviousWeekAndNotify()
+				if err != nil {
+					log.Error(err)
+				}
+			}
+
+			time.Sleep(waitingTime)
+		}
+	}()
+
 	telegramBot.Handle("/starttest", newOperator.Start)
 	log.Infof(nil, "starting to listen and serve telegram bot")
 	bot.Start()

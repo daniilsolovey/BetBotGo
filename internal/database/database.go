@@ -49,6 +49,14 @@ func NewDatabase(
 	return database
 }
 
+type StatisticResultOfPreviousDay struct {
+	EventID           string
+	PlayerIsWin       string
+	Score             string
+	WinnerInSecondSet string
+	CreatedAt         time.Time
+}
+
 func (database *Database) connect() (*pgxpool.Pool, error) {
 	databaseUrl := fmt.Sprintf("postgres://%s:%s@%s:%s/%s", database.user, database.password, database.host, database.port, database.name)
 	// connection, err := pgx.Connect(context.Background(), databaseUrl)
@@ -203,7 +211,7 @@ func (database *Database) InsertEventsResultsToStatistic(events []requester.Live
 		} else {
 			playerIsWin = "false"
 		}
-		_, err := database.client.Query(
+		rows, err := database.client.Query(
 			context.Background(),
 			SQL_INSERT_STATISTIC_ON_PREVIOUS_DAY,
 			event.EventID,
@@ -224,6 +232,8 @@ func (database *Database) InsertEventsResultsToStatistic(events []requester.Live
 				event, event.EventID,
 			)
 		}
+
+		rows.Close()
 	}
 
 	log.Info("events successfully added to statistic")
@@ -317,7 +327,7 @@ func (database *Database) GetLiveEventsResultsOnPreviousDate() ([]requester.Live
 
 		return nil, karma.Format(
 			err,
-			"unable to get live events on current date from the database",
+			"unable to get live events on previous date from the database",
 		)
 	}
 
@@ -347,7 +357,7 @@ func (database *Database) GetLiveEventsResultsOnPreviousDate() ([]requester.Live
 		if err != nil {
 			return nil, karma.Format(
 				err,
-				"error during scaning accruals from database rows",
+				"error during scaning live event results from database rows",
 			)
 		}
 
@@ -371,66 +381,63 @@ func (database *Database) GetLiveEventsResultsOnPreviousDate() ([]requester.Live
 		liveEvent.LastAwayOdd = convertedLastAwayOdd
 		result = append(result, liveEvent)
 	}
-	log.Warning("result ", result)
+
 	return result, nil
 }
 
-// func (database *Database) InsertEventsForToday(events []requester.EventWithOdds) error {
-// 	log.Infof(
-// 		karma.Describe("database", database.name),
-// 		"inserting events in database",
-// 	)
+func (database *Database) GetStatisticOnPreviousWeek() ([]StatisticResultOfPreviousDay, error) {
+	log.Info("receiving live events results on previous week")
+	timeNow, err := tools.GetCurrentMoscowTime()
+	if err != nil {
+		return nil, karma.Format(
+			err,
+			"unable to get current moscow time for receive statistic on previous week",
+		)
+	}
 
-// 	transaction, err := database.client.Begin(context.Background())
-// 	if err != nil {
-// 		return karma.Format(
-// 			err,
-// 			"unable to start a sql transaction",
-// 		)
-// 	}
+	rows, err := database.client.Query(
+		context.Background(),
+		SQL_SELECT_STATISTICS_OF_PREVIOUS_WEEK,
+		timeNow.Add(-24*time.Hour*7),
+	)
 
-// 	for _, event := range events {
-// 		_, err = transaction.Exec(
-// 			context.Background(),
-// 			SQL_INSERT_EVENTS_FOR_TODAY,
-// 			event.EventID,
-// 			event.HumanTime,
-// 			event.League.ID,
-// 			event.League.Name,
-// 			event.Favorite,
-// 			event.HomeOdd,
-// 			event.AwayOdd,
-// 		)
-// 		if err != nil {
-// 			errRollback := transaction.Rollback(context.Background())
-// 			if errRollback != nil {
-// 				return karma.Format(
-// 					errRollback,
-// 					"unable to rollback transaction!",
-// 				)
-// 			}
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
 
-// 			if strings.Contains(err.Error(), "ERROR: duplicate key value violates unique constraint") {
-// 				continue
-// 			}
+		return nil, karma.Format(
+			err,
+			"unable to get statistic on previous week from the database",
+		)
+	}
 
-// 			return karma.Format(
-// 				err,
-// 				"unable to add event to the database,"+
-// 					" event: %v, event_id: %s",
-// 				event, event.EventID,
-// 			)
-// 		}
-// 	}
+	defer func() {
+		rows.Close()
+		log.Error(err)
+	}()
 
-// 	err = transaction.Commit(context.Background())
-// 	if err != nil {
-// 		return karma.Format(
-// 			err,
-// 			"unable to commit transaction for adding events",
-// 		)
-// 	}
+	var results []StatisticResultOfPreviousDay
+	for rows.Next() {
+		var (
+			result StatisticResultOfPreviousDay
+		)
+		err := rows.Scan(
+			&result.EventID,
+			&result.PlayerIsWin,
+			&result.Score,
+			&result.WinnerInSecondSet,
+			&result.CreatedAt,
+		)
+		if err != nil {
+			return nil, karma.Format(
+				err,
+				"error during scaning accruals from database rows",
+			)
+		}
 
-// 	log.Info("events successfully added")
-// 	return nil
-// }
+		results = append(results, result)
+	}
+
+	return results, nil
+}
