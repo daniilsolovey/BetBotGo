@@ -262,7 +262,8 @@ func (operator *Operator) createHandlerLiveOdds(event requester.EventWithOdds) (
 		timeNow, err := tools.GetCurrentMoscowTime()
 		if err != nil {
 			log.Error(err)
-			return nil, false
+			time.Sleep(REQUEST_FREQUENCY_DELAY)
+			continue
 		}
 
 		if timeNow.After(startTime.Add(SELF_DISTRUCT_ROUTINE_LIVE_EVENT_TIMER)) {
@@ -273,7 +274,8 @@ func (operator *Operator) createHandlerLiveOdds(event requester.EventWithOdds) (
 		liveEvent, err := operator.requester.GetLiveEventByID(event.EventID)
 		if err != nil {
 			log.Errorf(err, "unable to get live event data by event_id: %s", event.EventID)
-			return nil, false
+			time.Sleep(REQUEST_FREQUENCY_DELAY)
+			continue
 		}
 
 		log.Infof(nil, "handle live odds for event: %v", liveEvent)
@@ -304,23 +306,26 @@ func (operator *Operator) createHandlerFinalOdds(event requester.EventWithOdds) 
 		timeNow, err := tools.GetCurrentMoscowTime()
 		if err != nil {
 			log.Error(err)
-			return nil, false
+			time.Sleep(REQUEST_FREQUENCY_DELAY)
+			continue
 		}
 
 		if timeNow.After(startTime.Add(SELF_DISTRUCT_ROUTINE_LIVE_EVENT_TIMER)) {
-			log.Infof(nil, "routine for second set stopped by timeout for event: %s", event.EventID)
+			log.Infof(nil, "routine for handle final odds stopped by timeout for event: %s", event.EventID)
 			return nil, false
 		}
 
+		log.Info("receiving odds for final set")
 		liveEvent, err := operator.requester.GetLiveEventByID(event.EventID)
 		if err != nil {
 			log.Errorf(err, "unable to get live event data by event_id: %s", event.EventID)
-			return nil, false
+			time.Sleep(REQUEST_FREQUENCY_DELAY)
+			continue
 		}
 
 		log.Infof(nil, "handle final live odds for event: %v", *liveEvent)
 
-		liveEventResult := operator.getResultsOfSecondSet(*liveEvent, 0)
+		liveEventResult := operator.getResultsOfSecondSet(*liveEvent)
 		switch liveEventResult {
 		case CODE_FINISHED_WITH_ERROR:
 			return liveEvent, false
@@ -333,17 +338,11 @@ func (operator *Operator) createHandlerFinalOdds(event requester.EventWithOdds) 
 	}
 }
 
-func (operator *Operator) getResultsOfSecondSet(liveEvent requester.EventWithOdds, errCount int) string {
+func (operator *Operator) getResultsOfSecondSet(liveEvent requester.EventWithOdds) string {
 	_, numberOfSet, err := handleLiveEventOdds(liveEvent)
 	if err != nil {
-		if errCount < MAX_ERROR_COUNT_IN_MONITORING_LIVE_EVENTS {
-			log.Errorf(err, "unable to handle live results of second set event_id: %s", liveEvent.EventID)
-			errCount = +1
-			time.Sleep(10 * time.Second)
-			return ""
-		} else {
-			return CODE_FINISHED_WITH_ERROR
-		}
+		log.Errorf(err, "unable to handle live results of second set event_id: %s", liveEvent.EventID)
+		return ""
 	}
 
 	if numberOfSet == 3 {

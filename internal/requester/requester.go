@@ -157,6 +157,7 @@ func (requester *Requester) GetLiveEventByID(eventID string) (*EventWithOdds, er
 		)
 	}
 
+	eventWithOdds.EventID = eventID
 	return &eventWithOdds, nil
 }
 
