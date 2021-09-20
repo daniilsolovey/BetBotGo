@@ -262,7 +262,7 @@ func (database *Database) UpdateLiveEventsResultsScoreAndWinnerFields(event requ
 		)
 	}
 
-	log.Info("live event successfully updated")
+	log.Info("live event with final results successfully updated")
 	return nil
 }
 

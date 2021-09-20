@@ -329,3 +329,34 @@ func TestOperator_handleLiveEventOdds_ReturnWinnerResult(
 	assert.Equal(t, numberOfset, 2)
 
 }
+func TestOperator_getWinnerInSecondSet_ReturnWinner(
+	t *testing.T,
+) {
+	tools.TimeNow = func() time.Time {
+		return time.Date(2021, 9, 03, 16, 0, 0, 0, time.UTC)
+	}
+
+	event := requester.EventWithOdds{
+		EventID:             "1111",
+		Favorite:            "away",
+		ResultEventWithOdds: requester.ResultEventWithOdds{Odds: requester.Odds{Odds91_1: []requester.OddsNumber{requester.OddsNumber{}}}},
+	}
+
+	event.ResultEventWithOdds.Odds.Odds91_1[0].HomeOd = "1.533"
+	event.ResultEventWithOdds.Odds.Odds91_1[0].AwayOd = "2"
+	event.ResultEventWithOdds.Odds.Odds91_1[0].SS = "27-11,1-3,0-0"
+	setData := event.ResultEventWithOdds.Odds.Odds91_1[0].SS
+
+	result := getWinnerInSecondSet(setData)
+
+	assert.Equal(t, result, "away")
+
+	event.ResultEventWithOdds.Odds.Odds91_1[0].HomeOd = "1.533"
+	event.ResultEventWithOdds.Odds.Odds91_1[0].AwayOd = "2"
+	event.ResultEventWithOdds.Odds.Odds91_1[0].SS = "27-11,9-3,0-0"
+	setData = event.ResultEventWithOdds.Odds.Odds91_1[0].SS
+
+	result = getWinnerInSecondSet(setData)
+
+	assert.Equal(t, result, "home")
+}

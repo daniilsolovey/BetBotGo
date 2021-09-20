@@ -186,6 +186,8 @@ func (operator *Operator) routineFinalHandleLiveOdds(event requester.EventWithOd
 	liveEvent, secondSetIsFinished := operator.createHandlerFinalOdds(event)
 	if secondSetIsFinished {
 		setData := liveEvent.ResultEventWithOdds.Odds.Odds91_1[0].SS
+		log.Infof(nil, "final set data: %s", setData)
+
 		winner := getWinnerInSecondSet(setData)
 
 		liveEvent.WinnerInSecondSet = winner
@@ -198,7 +200,7 @@ func (operator *Operator) routineFinalHandleLiveOdds(event requester.EventWithOd
 		//write to database result of second set
 		err := operator.database.UpdateLiveEventsResultsScoreAndWinnerFields(*liveEvent)
 		if err != nil {
-			log.Error(err)
+			log.Errorf(err, "unable to update live events results score and winner fields")
 		} else {
 			log.Infof(nil, "live event successfully updated in database, live_event: %v", liveEvent)
 		}
@@ -223,11 +225,11 @@ func (operator *Operator) routineStartHandleLiveOdds(event requester.EventWithOd
 
 	liveEvent, liveEventResult := operator.createHandlerLiveOdds(event)
 	if liveEventResult {
-		liveEvent.EventID = event.EventID
-		liveEvent.League.Name = event.League.Name
-		liveEvent.HomeCommandName = event.HomeCommandName
-		liveEvent.AwayCommandName = event.AwayCommandName
-		liveEvent.Favorite = event.Favorite
+		// liveEvent.EventID = event.EventID
+		// liveEvent.League.Name = event.League.Name
+		// liveEvent.HomeCommandName = event.HomeCommandName
+		// liveEvent.AwayCommandName = event.AwayCommandName
+		// liveEvent.Favorite = event.Favorite
 		err := operator.SendMessageAboutWinnerToTelegram(*liveEvent)
 		if err != nil {
 			log.Error(err)
@@ -278,9 +280,15 @@ func (operator *Operator) createHandlerLiveOdds(event requester.EventWithOdds) (
 			continue
 		}
 
+		liveEvent.EventID = event.EventID
+		liveEvent.League.Name = event.League.Name
+		liveEvent.HomeCommandName = event.HomeCommandName
+		liveEvent.AwayCommandName = event.AwayCommandName
+		liveEvent.Favorite = event.Favorite
+
 		log.Infof(nil, "handle live odds for event: %v", liveEvent)
 
-		liveEventResult := operator.getWinner(*liveEvent, 0)
+		liveEventResult := operator.getWinnerOfSecondSet(*liveEvent)
 		switch liveEventResult {
 		case CODE_FINISHED_WITH_ERROR:
 			return liveEvent, false
@@ -324,8 +332,13 @@ func (operator *Operator) createHandlerFinalOdds(event requester.EventWithOdds) 
 		}
 
 		log.Infof(nil, "handle final live odds for event: %v", *liveEvent)
+		liveEvent.EventID = event.EventID
+		liveEvent.League.Name = event.League.Name
+		liveEvent.HomeCommandName = event.HomeCommandName
+		liveEvent.AwayCommandName = event.AwayCommandName
+		liveEvent.Favorite = event.Favorite
 
-		liveEventResult := operator.getResultsOfSecondSet(*liveEvent)
+		liveEventResult := operator.getFinalResultsOfSecondSet(*liveEvent)
 		switch liveEventResult {
 		case CODE_FINISHED_WITH_ERROR:
 			return liveEvent, false
@@ -338,7 +351,7 @@ func (operator *Operator) createHandlerFinalOdds(event requester.EventWithOdds) 
 	}
 }
 
-func (operator *Operator) getResultsOfSecondSet(liveEvent requester.EventWithOdds) string {
+func (operator *Operator) getFinalResultsOfSecondSet(liveEvent requester.EventWithOdds) string {
 	_, numberOfSet, err := handleLiveEventOdds(liveEvent)
 	if err != nil {
 		log.Errorf(err, "unable to handle live results of second set event_id: %s", liveEvent.EventID)
@@ -352,17 +365,12 @@ func (operator *Operator) getResultsOfSecondSet(liveEvent requester.EventWithOdd
 	return ""
 }
 
-func (operator *Operator) getWinner(liveEvent requester.EventWithOdds, errCount int) string {
+func (operator *Operator) getWinnerOfSecondSet(liveEvent requester.EventWithOdds) string {
 	liveEventResult, numberOfSet, err := handleLiveEventOdds(liveEvent)
 	if err != nil {
-		if errCount < MAX_ERROR_COUNT_IN_MONITORING_LIVE_EVENTS {
-			log.Errorf(err, "unable to handle live event and receive winner event_id: %s", liveEvent.EventID)
-			errCount = +1
-			time.Sleep(10 * time.Second)
-			return ""
-		} else {
-			return CODE_FINISHED_WITH_ERROR
-		}
+		log.Errorf(err, "unable to handle live event and receive winner event_id: %s", liveEvent.EventID)
+		time.Sleep(2 * REQUEST_FREQUENCY_DELAY)
+		return ""
 	}
 
 	if liveEventResult {
