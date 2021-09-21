@@ -360,3 +360,100 @@ func TestOperator_getWinnerInSecondSet_ReturnWinner(
 
 	assert.Equal(t, result, "home")
 }
+
+func TestOperator_sortEventsByOdds_ReturnFavoriteIsHome(
+	t *testing.T,
+) {
+	tools.TimeNow = func() time.Time {
+		return time.Date(2021, 9, 03, 16, 0, 0, 0, time.UTC)
+	}
+
+	event := requester.EventWithOdds{
+		EventID: "1111",
+		ResultEventWithOdds: requester.ResultEventWithOdds{
+			Odds: requester.Odds{Odds91_1: []requester.OddsNumber{requester.OddsNumber{}}},
+		},
+	}
+	var events []requester.EventWithOdds
+
+	event.ResultEventWithOdds.Odds.Odds91_1[0].HomeOd = "1.233"
+	event.ResultEventWithOdds.Odds.Odds91_1[0].AwayOd = "3"
+
+	events = append(events, event)
+
+	result, err := sortEventsByOdds(events)
+	assert.NotNil(t, result)
+	assert.NoError(t, err)
+	for _, item := range result {
+		assert.Equal(t, item.Favorite, "home")
+	}
+}
+
+func TestOperator_sortEventsByOdds_ReturnFavoriteIsAway(
+	t *testing.T,
+) {
+	tools.TimeNow = func() time.Time {
+		return time.Date(2021, 9, 03, 16, 0, 0, 0, time.UTC)
+	}
+
+	event := requester.EventWithOdds{
+		EventID: "1111",
+		ResultEventWithOdds: requester.ResultEventWithOdds{
+			Odds: requester.Odds{Odds91_1: []requester.OddsNumber{requester.OddsNumber{}}},
+		},
+	}
+	var events []requester.EventWithOdds
+
+	event.ResultEventWithOdds.Odds.Odds91_1[0].HomeOd = "1.3"
+	event.ResultEventWithOdds.Odds.Odds91_1[0].AwayOd = "1.233"
+
+	events = append(events, event)
+
+	result, err := sortEventsByOdds(events)
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+	for _, item := range result {
+		assert.Equal(t, item.Favorite, "away")
+	}
+}
+
+func TestOperator_sortEventsByOdds_MissEvent(
+	t *testing.T,
+) {
+	tools.TimeNow = func() time.Time {
+		return time.Date(2021, 9, 03, 16, 0, 0, 0, time.UTC)
+	}
+
+	event := requester.EventWithOdds{
+		EventID: "1111",
+		ResultEventWithOdds: requester.ResultEventWithOdds{
+			Odds: requester.Odds{Odds91_1: []requester.OddsNumber{requester.OddsNumber{}}},
+		},
+	}
+	var events []requester.EventWithOdds
+
+	event.ResultEventWithOdds.Odds.Odds91_1[0].HomeOd = "7"
+	event.ResultEventWithOdds.Odds.Odds91_1[0].AwayOd = "1.33"
+
+	events = append(events, event)
+
+	result, err := sortEventsByOdds(events)
+	assert.NoError(t, err)
+	assert.Nil(t, result)
+
+	event.ResultEventWithOdds.Odds.Odds91_1[0].HomeOd = "7"
+	event.ResultEventWithOdds.Odds.Odds91_1[0].AwayOd = "1.31"
+
+	events = append(events, event)
+	result, err = sortEventsByOdds(events)
+	assert.NoError(t, err)
+	assert.Nil(t, result)
+
+	event.ResultEventWithOdds.Odds.Odds91_1[0].HomeOd = "7"
+	event.ResultEventWithOdds.Odds.Odds91_1[0].AwayOd = "1.30"
+
+	events = append(events, event)
+	result, err = sortEventsByOdds(events)
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+}
