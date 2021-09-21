@@ -3,6 +3,7 @@ package requester
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/daniilsolovey/BetBotGo/internal/config"
 	"github.com/reconquest/karma-go"
@@ -42,7 +43,7 @@ func (requester *Requester) GetUpcomingEvents() (*UpcomingEvents, error) {
 		)
 	}
 
-	client := &http.Client{}
+	client := &http.Client{Timeout: 1 * time.Minute}
 	response, err := client.Do(request)
 	if err != nil {
 		return nil, karma.Format(
@@ -86,7 +87,7 @@ func (requester *Requester) GetEventOddsByEventIDs(events *UpcomingEvents) ([]Ev
 			)
 		}
 
-		client := &http.Client{}
+		client := &http.Client{Timeout: 1 * time.Minute}
 		response, err := client.Do(request)
 		if err != nil {
 			return nil, karma.Format(
@@ -137,7 +138,7 @@ func (requester *Requester) GetLiveEventByID(eventID string) (*EventWithOdds, er
 		)
 	}
 
-	client := &http.Client{}
+	client := &http.Client{Timeout: 1 * time.Minute}
 	response, err := client.Do(request)
 	if err != nil {
 		return nil, karma.Format(
