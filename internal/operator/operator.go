@@ -202,7 +202,7 @@ func (operator *Operator) routineFinalHandleLiveOdds(event requester.EventWithOd
 		if err != nil {
 			log.Errorf(err, "unable to update live events results score and winner fields")
 		} else {
-			log.Infof(nil, "live event successfully updated in database, live_event: %v", liveEvent)
+			log.Infof(nil, "live event successfully updated in database, live_event_id: %s", liveEvent.EventID)
 		}
 	}
 }
@@ -234,14 +234,14 @@ func (operator *Operator) routineStartHandleLiveOdds(event requester.EventWithOd
 		if err != nil {
 			log.Error(err)
 		} else {
-			log.Infof(nil, "live event sent to telegram, event: %v", liveEvent)
+			log.Infof(nil, "live event sent to telegram, event_id: %s", liveEvent.EventID)
 		}
 
 		err = operator.database.InsertLiveEventResult(*liveEvent)
 		if err != nil {
 			log.Error(err)
 		} else {
-			log.Infof(nil, "live event inserted to database, event: %v", liveEvent)
+			log.Infof(nil, "live event inserted to database, event_id: %s", liveEvent.EventID)
 		}
 
 		go operator.routineFinalHandleLiveOdds(*liveEvent)
@@ -258,7 +258,7 @@ func (operator *Operator) createHandlerLiveOdds(event requester.EventWithOdds) (
 		return nil, false
 	}
 
-	log.Infof(nil, "routine for receivnig winner started, start_time: %s, event: %v", startTime.String(), event)
+	log.Infof(nil, "routine for receiving winner started, start_time: %s, event: %v", startTime.String(), event)
 
 	for {
 		timeNow, err := tools.GetCurrentMoscowTime()
@@ -286,7 +286,7 @@ func (operator *Operator) createHandlerLiveOdds(event requester.EventWithOdds) (
 		liveEvent.AwayCommandName = event.AwayCommandName
 		liveEvent.Favorite = event.Favorite
 
-		log.Infof(nil, "handle live odds for event: %v", liveEvent)
+		log.Infof(nil, "handle live odds for event_id: %s", liveEvent.EventID)
 
 		liveEventResult := operator.getWinnerOfSecondSet(*liveEvent)
 		switch liveEventResult {
@@ -331,7 +331,7 @@ func (operator *Operator) createHandlerFinalOdds(event requester.EventWithOdds) 
 			continue
 		}
 
-		log.Infof(nil, "handle final live odds for event: %v", *liveEvent)
+		log.Infof(nil, "handle final live odds for event_id: %s", liveEvent.EventID)
 		liveEvent.EventID = event.EventID
 		liveEvent.League.Name = event.League.Name
 		liveEvent.HomeCommandName = event.HomeCommandName
@@ -340,8 +340,6 @@ func (operator *Operator) createHandlerFinalOdds(event requester.EventWithOdds) 
 
 		liveEventResult := operator.getFinalResultsOfSecondSet(*liveEvent)
 		switch liveEventResult {
-		case CODE_FINISHED_WITH_ERROR:
-			return liveEvent, false
 		case CODE_NUMBER_OF_SET_3:
 			return liveEvent, true
 		case "":
@@ -352,9 +350,9 @@ func (operator *Operator) createHandlerFinalOdds(event requester.EventWithOdds) 
 }
 
 func (operator *Operator) getFinalResultsOfSecondSet(liveEvent requester.EventWithOdds) string {
-	_, numberOfSet, err := handleLiveEventOdds(liveEvent)
+	numberOfSet, err := handleFinalLiveSet(liveEvent)
 	if err != nil {
-		log.Errorf(err, "unable to handle live results of second set event_id: %s", liveEvent.EventID)
+		log.Errorf(err, "unable to handle final live results of second set event_id: %s", liveEvent.EventID)
 		return ""
 	}
 

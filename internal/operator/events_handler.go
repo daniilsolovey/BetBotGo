@@ -166,6 +166,20 @@ func handleLiveEventOdds(event requester.EventWithOdds) (bool, int, error) {
 
 }
 
+func handleFinalLiveSet(event requester.EventWithOdds) (int, error) {
+	if len(event.ResultEventWithOdds.Odds.Odds91_1) == 0 {
+		return 0, errors.New("len of sets is null")
+	}
+
+	setData := event.ResultEventWithOdds.Odds.Odds91_1[0].SS
+
+	if getNumberOfSet(setData) == 3 {
+		return 3, nil
+	}
+
+	return 0, nil
+}
+
 func getWinnerInFirstSet(setData string) string {
 	liveSetScore := getLiveSetScore(setData)
 	numberOfSet := getNumberOfSet(setData)
