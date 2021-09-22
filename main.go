@@ -78,7 +78,7 @@ func main() {
 	}
 
 	defer database.Close()
-	requester := requester.NewRequester(config)
+	newRequester := requester.NewRequester(config)
 
 	log.Info("creating telegram bot")
 	bot, err := tb.NewBot(
@@ -95,7 +95,7 @@ func main() {
 
 	log.Info("creating operator")
 	newOperator := operator.NewOperator(
-		config, database, requester, telegramBot,
+		config, database, newRequester, telegramBot,
 	)
 	newStatistic := statistics.NewStatistics(database, telegramBot)
 

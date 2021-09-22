@@ -186,23 +186,13 @@ func (operator *Operator) routineFinalHandleLiveOdds(event requester.EventWithOd
 	liveEvent, secondSetIsFinished := operator.createHandlerFinalOdds(event)
 	if secondSetIsFinished {
 		setData := liveEvent.ResultEventWithOdds.Odds.Odds91_1[0].SS
-		log.Infof(nil, "final set data: %s", setData)
-
 		winner := getWinnerInSecondSet(setData)
-
-		liveEvent.WinnerInSecondSet = winner
-		liveEvent.EventID = event.EventID
-		liveEvent.League.Name = event.League.Name
-		liveEvent.HomeCommandName = event.HomeCommandName
-		liveEvent.AwayCommandName = event.AwayCommandName
-		liveEvent.Favorite = event.Favorite
-
+		log.Infof(nil, "final set data: %s", setData)
+		log.Infof(nil, "winner: %s", winner)
 		//write to database result of second set
-		err := operator.database.UpdateLiveEventsResultsScoreAndWinnerFields(*liveEvent)
+		err := operator.database.UpdateLiveEventsResultsScoreAndWinnerFields(event.EventID, setData, winner)
 		if err != nil {
 			log.Errorf(err, "unable to update live events results score and winner fields")
-		} else {
-			log.Infof(nil, "live event successfully updated in database, live_event_id: %s", liveEvent.EventID)
 		}
 	}
 }

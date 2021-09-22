@@ -240,29 +240,32 @@ func (database *Database) InsertEventsResultsToStatistic(events []requester.Live
 	return nil
 }
 
-func (database *Database) UpdateLiveEventsResultsScoreAndWinnerFields(event requester.EventWithOdds) error {
+func (database *Database) UpdateLiveEventsResultsScoreAndWinnerFields(eventID, setData, winner string) error {
 	log.Infof(
 		karma.Describe("database", database.name),
 		"update live event result score and winner of second set in database",
 	)
 
-	_, err := database.client.Query(
+	rows, err := database.client.Query(
 		context.Background(),
 		SQL_UPDATE_LIVE_EVENTS_RESULTS_SCORE_AND_WINNER,
-		event.ResultEventWithOdds.Odds.Odds91_1[0].SS,
-		event.WinnerInSecondSet,
-		event.EventID,
+		setData,
+		winner,
+		eventID,
 	)
+	defer func() {
+		rows.Close()
+	}()
 	if err != nil {
 		return karma.Format(
 			err,
 			"unable to update live event in the database,"+
-				" event: %v, event_id: %s",
-			event, event.EventID,
+				" event_id: %s",
+			eventID,
 		)
 	}
 
-	log.Info("live event with final results successfully updated")
+	log.Infof(nil, "live event with final results successfully updated, event_id: %s", eventID)
 	return nil
 }
 
@@ -280,7 +283,7 @@ func (database *Database) InsertLiveEventResult(event requester.EventWithOdds) e
 		)
 	}
 
-	_, err = database.client.Query(
+	rows, err := database.client.Query(
 		context.Background(),
 		SQL_INSERT_LIVE_EVENTS_RESULTS,
 		event.EventID,
@@ -291,6 +294,9 @@ func (database *Database) InsertLiveEventResult(event requester.EventWithOdds) e
 		event.Favorite,
 		timeNow,
 	)
+	defer func() {
+		rows.Close()
+	}()
 	if err != nil {
 		return karma.Format(
 			err,
