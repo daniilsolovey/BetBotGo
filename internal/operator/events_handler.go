@@ -87,14 +87,18 @@ func sortEventsByOdds(eventsWithOdds []requester.EventWithOdds) ([]requester.Eve
 			}
 		}
 
-		homeOdd, err = convertStringToFloat(primaryOdds[0].HomeOd)
-		if err != nil {
-			return nil, err
-		}
+		if len(primaryOdds) != 0 {
+			homeOdd, err = convertStringToFloat(primaryOdds[0].HomeOd)
+			if err != nil {
+				return nil, err
+			}
 
-		awayOdd, err = convertStringToFloat(primaryOdds[0].AwayOd)
-		if err != nil {
-			return nil, err
+			awayOdd, err = convertStringToFloat(primaryOdds[0].AwayOd)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			continue
 		}
 
 		if homeOdd < constants.ODD_FAVORITE_MAX || awayOdd < constants.ODD_FAVORITE_MAX {
