@@ -2,6 +2,7 @@ package statistics
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/daniilsolovey/BetBotGo/internal/constants"
 	"github.com/daniilsolovey/BetBotGo/internal/database"
@@ -181,5 +182,9 @@ func getAverageOdd(events []requester.LiveEventResult) float64 {
 	}
 
 	averageOdd := (sum) / float64((len(allOdds)))
-	return averageOdd
+	return roundNumber(averageOdd, 0.01)
+}
+
+func roundNumber(number, unit float64) float64 {
+	return math.Round(number/unit) * unit
 }
