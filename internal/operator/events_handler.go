@@ -65,14 +65,29 @@ func sortEventsByOdds(eventsWithOdds []requester.EventWithOdds) ([]requester.Eve
 	for _, event := range eventsWithOdds {
 		primaryOdds = event.ResultEventWithOdds.Odds.Odds91_1
 		if len(primaryOdds) != 0 {
-			if primaryOdds[0].HomeOd == "-" {
-				primaryOdds[0].HomeOd = "0000"
-			}
+			// if primaryOdds[0].HomeOd == "-" {
+			// 	primaryOdds[0].HomeOd = "0000"
+			// }
 
-			if primaryOdds[0].AwayOd == "-" {
-				primaryOdds[0].AwayOd = "0000"
-			}
+			// if primaryOdds[0].AwayOd == "-" {
+			// 	primaryOdds[0].AwayOd = "0000"
+			// }
 
+			// homeOdd, err = convertStringToFloat(primaryOdds[0].HomeOd)
+			// if err != nil {
+			// 	return nil, err
+			// }
+
+			// awayOdd, err = convertStringToFloat(primaryOdds[0].AwayOd)
+			// if err != nil {
+			// 	return nil, err
+			// }
+			if primaryOdds[0].HomeOd == "-" || primaryOdds[0].AwayOd == "-" {
+				continue
+			}
+		}
+
+		if len(primaryOdds) != 0 {
 			homeOdd, err = convertStringToFloat(primaryOdds[0].HomeOd)
 			if err != nil {
 				return nil, err
@@ -82,6 +97,8 @@ func sortEventsByOdds(eventsWithOdds []requester.EventWithOdds) ([]requester.Eve
 			if err != nil {
 				return nil, err
 			}
+		} else {
+			continue
 		}
 
 		if homeOdd < constants.ODD_FAVORITE_MAX || awayOdd < constants.ODD_FAVORITE_MAX {
@@ -136,7 +153,7 @@ func handleLiveEventOdds(event requester.EventWithOdds) (bool, int, error) {
 		return false, 0, err
 	}
 
-	awayOdd, err := convertStringToFloat(event.ResultEventWithOdds.Odds.Odds91_1[0].HomeOd)
+	awayOdd, err := convertStringToFloat(event.ResultEventWithOdds.Odds.Odds91_1[0].AwayOd)
 	if err != nil {
 		return false, 0, err
 	}
@@ -154,15 +171,30 @@ func handleLiveEventOdds(event requester.EventWithOdds) (bool, int, error) {
 		return false, 0, nil
 	}
 
-	if event.Favorite != winner && getNumberOfSet(setData) == 2 && mainOdd > 1.5 {
-		return true, 0, nil
-	}
-
 	if getNumberOfSet(setData) == 3 {
 		return false, 3, nil
 	}
 
-	return false, 0, nil
+	if event.Favorite != winner && getNumberOfSet(setData) == 2 && mainOdd > 1.5 {
+		return true, 2, nil
+	} else {
+		return false, 2, nil
+	}
+
+}
+
+func handleFinalLiveSet(event requester.EventWithOdds) (int, error) {
+	if len(event.ResultEventWithOdds.Odds.Odds91_1) == 0 {
+		return 0, errors.New("len of sets is null")
+	}
+
+	setData := event.ResultEventWithOdds.Odds.Odds91_1[0].SS
+
+	if getNumberOfSet(setData) == 3 {
+		return 3, nil
+	}
+
+	return 0, nil
 }
 
 func getWinnerInFirstSet(setData string) string {

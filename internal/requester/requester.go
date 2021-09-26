@@ -3,6 +3,7 @@ package requester
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/daniilsolovey/BetBotGo/internal/config"
 	"github.com/reconquest/karma-go"
@@ -42,7 +43,7 @@ func (requester *Requester) GetUpcomingEvents() (*UpcomingEvents, error) {
 		)
 	}
 
-	client := &http.Client{}
+	client := &http.Client{Timeout: 1 * time.Minute}
 	response, err := client.Do(request)
 	if err != nil {
 		return nil, karma.Format(
@@ -58,7 +59,7 @@ func (requester *Requester) GetUpcomingEvents() (*UpcomingEvents, error) {
 	if err != nil {
 		return nil, karma.Format(
 			err,
-			"unable to decode response, response status code: %d ",
+			"unable to decode response for upcoming_events, response status code: %d ",
 			response.StatusCode,
 		)
 	}
@@ -86,7 +87,7 @@ func (requester *Requester) GetEventOddsByEventIDs(events *UpcomingEvents) ([]Ev
 			)
 		}
 
-		client := &http.Client{}
+		client := &http.Client{Timeout: 1 * time.Minute}
 		response, err := client.Do(request)
 		if err != nil {
 			return nil, karma.Format(
@@ -101,7 +102,7 @@ func (requester *Requester) GetEventOddsByEventIDs(events *UpcomingEvents) ([]Ev
 		if err != nil {
 			return nil, karma.Format(
 				err,
-				"unable to decode response, response status code: %d ",
+				"unable to decode response when receiving event odds by event_ids, response status code: %d ",
 				response.StatusCode,
 			)
 		}
@@ -137,7 +138,7 @@ func (requester *Requester) GetLiveEventByID(eventID string) (*EventWithOdds, er
 		)
 	}
 
-	client := &http.Client{}
+	client := &http.Client{Timeout: 1 * time.Minute}
 	response, err := client.Do(request)
 	if err != nil {
 		return nil, karma.Format(
@@ -152,11 +153,12 @@ func (requester *Requester) GetLiveEventByID(eventID string) (*EventWithOdds, er
 	if err != nil {
 		return nil, karma.Format(
 			err,
-			"unable to decode response, response status code: %d ",
+			"unable to decode response when receiving live_event by id, response status code: %d ",
 			response.StatusCode,
 		)
 	}
 
+	eventWithOdds.EventID = eventID
 	return &eventWithOdds, nil
 }
 

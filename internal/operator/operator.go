@@ -16,8 +16,12 @@ import (
 const (
 	MONITORING_LIVE_EVENT_TIME_DELAY          = 30 * time.Minute
 	MAX_ERROR_COUNT_IN_MONITORING_LIVE_EVENTS = 1000
-	SELF_DISTRUCT_ROUTINE_LIVE_EVENT_TIMER    = 2 * time.Hour
-	REQUEST_FREQUENCY_DELAY                   = 5 * time.Second
+	SELF_DISTRUCT_ROUTINE_LIVE_EVENT_TIMER    = 3 * time.Hour
+	REQUEST_FREQUENCY_DELAY                   = 7 * time.Second
+
+	CODE_FINISHED_WITH_ERROR = "finished with error"
+	CODE_NUMBER_OF_SET_3     = "numberOfSet=3"
+	CODE_IS_WINNER_TRUE      = "true"
 )
 
 type Operator struct {
@@ -183,25 +187,18 @@ func (operator *Operator) routineFinalHandleLiveOdds(event requester.EventWithOd
 	if secondSetIsFinished {
 		setData := liveEvent.ResultEventWithOdds.Odds.Odds91_1[0].SS
 		winner := getWinnerInSecondSet(setData)
-		liveEvent.WinnerInSecondSet = winner
+		log.Infof(nil, "final set data: %s", setData)
+		log.Infof(nil, "winner: %s", winner)
 		//write to database result of second set
-		liveEvent.EventID = event.EventID
-		liveEvent.League.Name = event.League.Name
-		liveEvent.HomeCommandName = event.HomeCommandName
-		liveEvent.AwayCommandName = event.AwayCommandName
-		liveEvent.Favorite = event.Favorite
-
-		err := operator.database.UpdateLiveEventsResultsScoreAndWinnerFields(liveEvent)
+		err := operator.database.UpdateLiveEventsResultsScoreAndWinnerFields(event.EventID, setData, winner)
 		if err != nil {
-			log.Error(err)
-		} else {
-			log.Infof(nil, "live event successfully updated in database, live_event: %v", liveEvent)
+			log.Errorf(err, "unable to update live events results score and winner fields")
 		}
 	}
 }
 
 func (operator *Operator) routineStartHandleLiveOdds(event requester.EventWithOdds) error {
-	log.Infof(nil, "creating routine for event_id: %v", event)
+	log.Infof(nil, "creating routine for event_id: %s", event.EventID)
 	timeNow, err := tools.GetCurrentMoscowTime()
 	if err != nil {
 		return karma.Format(
@@ -218,23 +215,23 @@ func (operator *Operator) routineStartHandleLiveOdds(event requester.EventWithOd
 
 	liveEvent, liveEventResult := operator.createHandlerLiveOdds(event)
 	if liveEventResult {
-		liveEvent.EventID = event.EventID
-		liveEvent.League.Name = event.League.Name
-		liveEvent.HomeCommandName = event.HomeCommandName
-		liveEvent.AwayCommandName = event.AwayCommandName
-		liveEvent.Favorite = event.Favorite
+		// liveEvent.EventID = event.EventID
+		// liveEvent.League.Name = event.League.Name
+		// liveEvent.HomeCommandName = event.HomeCommandName
+		// liveEvent.AwayCommandName = event.AwayCommandName
+		// liveEvent.Favorite = event.Favorite
 		err := operator.SendMessageAboutWinnerToTelegram(*liveEvent)
 		if err != nil {
 			log.Error(err)
 		} else {
-			log.Infof(nil, "live event sent to telegram, event: %v", liveEvent)
+			log.Infof(nil, "live event sent to telegram, event_id: %s", liveEvent.EventID)
 		}
 
 		err = operator.database.InsertLiveEventResult(*liveEvent)
 		if err != nil {
 			log.Error(err)
 		} else {
-			log.Infof(nil, "live event inserted to database, event: %v", liveEvent)
+			log.Infof(nil, "live event inserted to database, event_id: %s", liveEvent.EventID)
 		}
 
 		go operator.routineFinalHandleLiveOdds(*liveEvent)
@@ -248,14 +245,17 @@ func (operator *Operator) createHandlerLiveOdds(event requester.EventWithOdds) (
 	startTime, err := tools.GetCurrentMoscowTime()
 	if err != nil {
 		log.Error(err)
+		return nil, false
 	}
 
-	log.Infof(nil, "routine for receivnig winner started, start_time: %s, event: %v", startTime.String(), event)
+	log.Infof(nil, "routine for receiving winner started, start_time: %s, event: %v", startTime.String(), event)
 
 	for {
 		timeNow, err := tools.GetCurrentMoscowTime()
 		if err != nil {
 			log.Error(err)
+			time.Sleep(REQUEST_FREQUENCY_DELAY)
+			continue
 		}
 
 		if timeNow.After(startTime.Add(SELF_DISTRUCT_ROUTINE_LIVE_EVENT_TIMER)) {
@@ -266,17 +266,25 @@ func (operator *Operator) createHandlerLiveOdds(event requester.EventWithOdds) (
 		liveEvent, err := operator.requester.GetLiveEventByID(event.EventID)
 		if err != nil {
 			log.Errorf(err, "unable to get live event data by event_id: %s", event.EventID)
+			time.Sleep(REQUEST_FREQUENCY_DELAY)
+			continue
 		}
 
-		log.Infof(nil, "handle live odds for event: %v", *liveEvent)
+		liveEvent.EventID = event.EventID
+		liveEvent.League.Name = event.League.Name
+		liveEvent.HomeCommandName = event.HomeCommandName
+		liveEvent.AwayCommandName = event.AwayCommandName
+		liveEvent.Favorite = event.Favorite
 
-		liveEventResult := operator.getWinner(*liveEvent, 0)
+		log.Infof(nil, "handle live odds for event_id: %s", liveEvent.EventID)
+
+		liveEventResult := operator.getWinnerOfSecondSet(*liveEvent)
 		switch liveEventResult {
-		case "finished with error":
+		case CODE_FINISHED_WITH_ERROR:
 			return liveEvent, false
-		case "numberOfSet=3":
+		case CODE_NUMBER_OF_SET_3:
 			return liveEvent, false
-		case "true":
+		case CODE_IS_WINNER_TRUE:
 			return liveEvent, true
 		case "":
 			time.Sleep(REQUEST_FREQUENCY_DELAY)
@@ -285,7 +293,7 @@ func (operator *Operator) createHandlerLiveOdds(event requester.EventWithOdds) (
 	}
 }
 
-func (operator *Operator) createHandlerFinalOdds(event requester.EventWithOdds) (requester.EventWithOdds, bool) {
+func (operator *Operator) createHandlerFinalOdds(event requester.EventWithOdds) (*requester.EventWithOdds, bool) {
 	startTime, err := tools.GetCurrentMoscowTime()
 	if err != nil {
 		log.Error(err)
@@ -296,26 +304,34 @@ func (operator *Operator) createHandlerFinalOdds(event requester.EventWithOdds) 
 		timeNow, err := tools.GetCurrentMoscowTime()
 		if err != nil {
 			log.Error(err)
+			time.Sleep(REQUEST_FREQUENCY_DELAY)
+			continue
 		}
 
 		if timeNow.After(startTime.Add(SELF_DISTRUCT_ROUTINE_LIVE_EVENT_TIMER)) {
-			log.Infof(nil, "routine for second set stopped by timeout for event: %s", event.EventID)
-			return requester.EventWithOdds{}, false
+			log.Infof(nil, "routine for handle final odds stopped by timeout for event: %s", event.EventID)
+			return nil, false
 		}
 
+		log.Info("receiving odds for final set")
 		liveEvent, err := operator.requester.GetLiveEventByID(event.EventID)
 		if err != nil {
 			log.Errorf(err, "unable to get live event data by event_id: %s", event.EventID)
+			time.Sleep(REQUEST_FREQUENCY_DELAY)
+			continue
 		}
 
-		log.Infof(nil, "handle final live odds for event: %v", *liveEvent)
+		log.Infof(nil, "handle final live odds for event_id: %s", liveEvent.EventID)
+		liveEvent.EventID = event.EventID
+		liveEvent.League.Name = event.League.Name
+		liveEvent.HomeCommandName = event.HomeCommandName
+		liveEvent.AwayCommandName = event.AwayCommandName
+		liveEvent.Favorite = event.Favorite
 
-		liveEventResult := operator.getResultsOfSecondSet(*liveEvent, 0)
+		liveEventResult := operator.getFinalResultsOfSecondSet(*liveEvent)
 		switch liveEventResult {
-		case "finished with error":
-			return *liveEvent, false
-		case "numberOfSet=3":
-			return *liveEvent, true
+		case CODE_NUMBER_OF_SET_3:
+			return liveEvent, true
 		case "":
 			time.Sleep(REQUEST_FREQUENCY_DELAY)
 			continue
@@ -323,94 +339,36 @@ func (operator *Operator) createHandlerFinalOdds(event requester.EventWithOdds) 
 	}
 }
 
-func (operator *Operator) getResultsOfSecondSet(liveEvent requester.EventWithOdds, errCount int) string {
-	// log.Infof(nil, "handle live odds for event: %v", event)
-	// liveEvent, err := operator.requester.GetLiveEventByID(event.EventID)
-	// if err != nil {
-	// 	if errCount < MAX_ERROR_COUNT_IN_MONITORING_LIVE_EVENTS {
-	// 		log.Errorf(err, "unable to get live event data by event_id: %s", event.EventID)
-	// 		errCount = +1
-	// 		time.Sleep(2 * time.Second)
-	// 	} else {
-	// 		// break
-	// 		return "finished with error"
-	// 	}
-	// }
-
-	_, numberOfSet, err := handleLiveEventOdds(liveEvent)
+func (operator *Operator) getFinalResultsOfSecondSet(liveEvent requester.EventWithOdds) string {
+	numberOfSet, err := handleFinalLiveSet(liveEvent)
 	if err != nil {
-		if errCount < MAX_ERROR_COUNT_IN_MONITORING_LIVE_EVENTS {
-			log.Errorf(err, "unable to handle live event event_id: %s", liveEvent.EventID)
-			errCount = +1
-			time.Sleep(2 * time.Second)
-		} else {
-			return "finished with error"
-		}
+		log.Errorf(err, "unable to handle final live results of second set event_id: %s", liveEvent.EventID)
+		return ""
 	}
 
 	if numberOfSet == 3 {
-		return "numberOfSet=3"
+		return CODE_NUMBER_OF_SET_3
 	}
 
 	return ""
 }
 
-func (operator *Operator) getWinner(liveEvent requester.EventWithOdds, errCount int) string {
-	// log.Infof(nil, "handle live odds for event: %v", event)
-	// liveEvent, err := operator.requester.GetLiveEventByID(event.EventID)
-	// if err != nil {
-	// 	if errCount < MAX_ERROR_COUNT_IN_MONITORING_LIVE_EVENTS {
-	// 		log.Errorf(err, "unable to get live event data by event_id: %s", event.EventID)
-	// 		errCount = +1
-	// 		time.Sleep(2 * time.Second)
-	// 	} else {
-	// 		// break
-	// 		return "finished with error"
-	// 	}
-	// }
-
+func (operator *Operator) getWinnerOfSecondSet(liveEvent requester.EventWithOdds) string {
 	liveEventResult, numberOfSet, err := handleLiveEventOdds(liveEvent)
 	if err != nil {
-		if errCount < MAX_ERROR_COUNT_IN_MONITORING_LIVE_EVENTS {
-			log.Errorf(err, "unable to handle live event event_id: %s", liveEvent.EventID)
-			errCount = +1
-			time.Sleep(10 * time.Second)
-		} else {
-			return "finished with error"
-		}
+		log.Errorf(err, "unable to handle live event and receive winner event_id: %s", liveEvent.EventID)
+		time.Sleep(2 * REQUEST_FREQUENCY_DELAY)
+		return ""
 	}
 
 	if liveEventResult {
-		return "true"
+		return CODE_IS_WINNER_TRUE
 
 	}
 
 	if numberOfSet == 3 {
-		return "numberOfSet=3"
+		return CODE_NUMBER_OF_SET_3
 	}
 
 	return ""
 }
-
-// func (operator *Operator) CreateRoutinesForEachEvent(events []requester.EventWithOdds) error {
-// 	timeNow, err := tools.GetCurrentMoscowTime()
-// 	if err != nil {
-// 		return karma.Format(
-// 			err,
-// 			"unable to get moscow time for check that event ready to start in go-routine",
-// 		)
-// 	}
-
-// 	for _, event := range events {
-// 		if event.HumanTime.After(timeNow) || event.HumanTime.Before(timeNow) && event.HumanTime.Before(timeNow.Add(30*time.Minute)) {
-// 			go operator.RoutineHandleLiveOdds(event)
-// 		}
-
-// 		// if event.HumanTime.Before(timeNow) && event.HumanTime.Before(timeNow.Add(60*time.Minute)) {
-// 		// 	go operator.RoutineHandleLiveOdds(event)
-// 		// }
-
-// 	}
-
-// 	return nil
-// }

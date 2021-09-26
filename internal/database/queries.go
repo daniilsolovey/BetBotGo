@@ -105,9 +105,9 @@ const (
 	SELECT * FROM live_events_results
 	WHERE CAST($1 AS Date) = CAST(live_events_results.created_at AS Date);
 `
-)
 
-// SQL_SELECT_LIVE_EVENTS_AT_END_OF_DAY = `
-// SELECT * FROM live_events_results
-// WHERE CAST($1 AS Date) = CAST(live_events_results.created_at AS Date);
-// `
+	SQL_SELECT_STATISTICS_OF_PREVIOUS_WEEK = `
+	SELECT * FROM statistic_on_previous_day
+	WHERE CAST($1 AS Date) = CAST(statistic_on_previous_day.created_at AS Date);
+`
+)

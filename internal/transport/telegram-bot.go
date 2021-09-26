@@ -35,7 +35,7 @@ func (telegram *Telegram) Handle(
 	telegram.bot.Handle(cmd, func(message *tb.Message) {
 		err := fn(message)
 		if err != nil {
-			log.Infof(nil, "error while processing %s: %s", cmd, err)
+			log.Errorf(nil, "error while processing %s: %s", cmd, err)
 		}
 	})
 }
