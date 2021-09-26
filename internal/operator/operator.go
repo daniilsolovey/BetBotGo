@@ -17,7 +17,7 @@ const (
 	MONITORING_LIVE_EVENT_TIME_DELAY          = 30 * time.Minute
 	MAX_ERROR_COUNT_IN_MONITORING_LIVE_EVENTS = 1000
 	SELF_DISTRUCT_ROUTINE_LIVE_EVENT_TIMER    = 3 * time.Hour
-	REQUEST_FREQUENCY_DELAY                   = 5 * time.Second
+	REQUEST_FREQUENCY_DELAY                   = 7 * time.Second
 
 	CODE_FINISHED_WITH_ERROR = "finished with error"
 	CODE_NUMBER_OF_SET_3     = "numberOfSet=3"
