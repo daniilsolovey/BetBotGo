@@ -426,9 +426,11 @@ func (database *Database) GetStatisticOnPreviousWeek() ([]StatisticResultOfPrevi
 	var results []StatisticResultOfPreviousDay
 	for rows.Next() {
 		var (
+			id     int
 			result StatisticResultOfPreviousDay
 		)
 		err := rows.Scan(
+			&id,
 			&result.EventID,
 			&result.PlayerIsWin,
 			&result.Score,
@@ -438,7 +440,7 @@ func (database *Database) GetStatisticOnPreviousWeek() ([]StatisticResultOfPrevi
 		if err != nil {
 			return nil, karma.Format(
 				err,
-				"error during scaning accruals from database rows",
+				"error during scaning results of previous week from database rows",
 			)
 		}
 
