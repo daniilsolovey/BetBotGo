@@ -108,6 +108,6 @@ const (
 
 	SQL_SELECT_STATISTICS_OF_PREVIOUS_WEEK = `
 	SELECT * FROM statistic_on_previous_day
-	WHERE CAST($1 AS Date) = CAST(statistic_on_previous_day.created_at AS Date);
-`
+	WHERE (created_at >= CAST($1 AS Date));
+	`
 )
