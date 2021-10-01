@@ -124,7 +124,7 @@ func main() {
 		}
 	}()
 
-	wg.Add(2)
+	wg.Add(1)
 	go func() {
 		log.Info("start cycle with receiving statistic on previous day")
 		for {
@@ -146,7 +146,7 @@ func main() {
 		}
 	}()
 
-	wg.Add(3)
+	wg.Add(1)
 	go func() {
 		log.Info("start cycle with receiving statistic on previous week")
 		for {
