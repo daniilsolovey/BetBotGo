@@ -6,6 +6,7 @@ import (
 
 	tb "gopkg.in/tucnak/telebot.v2"
 
+	"github.com/daniilsolovey/BetBotGo/handler"
 	"github.com/daniilsolovey/BetBotGo/internal/config"
 	"github.com/daniilsolovey/BetBotGo/internal/database"
 	"github.com/daniilsolovey/BetBotGo/internal/operator"
@@ -169,6 +170,11 @@ func main() {
 
 			time.Sleep(waitingTime)
 		}
+	}()
+
+	newHandler := handler.NewHandler(database, config)
+	go func() {
+		newHandler.StartServer(config)
 	}()
 
 	telegramBot.Handle("/starttest", newOperator.Start)
