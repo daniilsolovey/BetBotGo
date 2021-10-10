@@ -485,8 +485,32 @@ func TestOperator_sortEventsByLeagues_ReturnExpectedListWithCountries(
 	}
 	event3.League.Name = testName3
 
+	testName4 := "League Ukraine Women"
+	event4 := requester.EventWithOdds{
+		EventID: "4444",
+	}
+	event4.League.Name = testName4
+
+	testName5 := "League Ukraine Men"
+	event5 := requester.EventWithOdds{
+		EventID: "5555",
+	}
+	event5.League.Name = testName5
+
+	testName6 := "Spain Women"
+	event6 := requester.EventWithOdds{
+		EventID: "6666",
+	}
+	event6.League.Name = testName6
+
+	testName7 := "Spain"
+	event7 := requester.EventWithOdds{
+		EventID: "7777",
+	}
+	event7.League.Name = testName7
+
 	var events []requester.EventWithOdds
-	events = append(events, event1, event2, event3)
+	events = append(events, event1, event2, event3, event4, event5, event6, event7)
 	sortedEventsByLeagues := handleEventsByLeagues(events)
 	assert.NotEmpty(t, sortedEventsByLeagues)
 
@@ -500,18 +524,31 @@ func TestOperator_sortEventsByLeagues_ReturnExpectedListWithCountries(
 	}
 
 	if !tools.Find(testResult, testName1) {
-		assert.Fail(t, "should contain this country: %s", testName1)
+		assert.Fail(t, "should contain this country:", testName1)
 	}
 
 	if !tools.Find(testResult, testName2) {
-		assert.Fail(t, "should contain this country: %s", testName2)
+		assert.Fail(t, "should contain this country:", testName2)
 	}
 
-	log.Warning(" tools.Find(testResult, testName3) ", tools.Find(testResult, testName3))
-	log.Warning("testResult ", testResult)
 	if tools.Find(testResult, testName3) {
-		log.Warning("found ")
-		assert.Fail(t, "should not contain this country: %s", testName3)
+		assert.Fail(t, "should not contain this country:", testName3)
+	}
+
+	if !tools.Find(testResult, testName4) {
+		assert.Fail(t, "should contain this country:", testName4)
+	}
+
+	if tools.Find(testResult, testName5) {
+		assert.Fail(t, "should not contain this country: ", testName5)
+	}
+
+	if !tools.Find(testResult, testName6) {
+		assert.Fail(t, "should contain this country:", testName6)
+	}
+
+	if tools.Find(testResult, testName7) {
+		assert.Fail(t, "should not contain this country: ", testName7)
 	}
 
 }

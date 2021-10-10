@@ -105,12 +105,28 @@ func handleEventsByLeagues(events []requester.EventWithOdds) []requester.EventWi
 	for _, event := range events {
 		for _, country := range countries {
 			if strings.Contains(event.League.Name, country) {
+				if !isSpecificLeagueContainsWomen(event.League.Name, country) {
+					continue
+				}
 				result = append(result, event)
 			}
 		}
 	}
 
 	return result
+}
+
+func isSpecificLeagueContainsWomen(leagueName, country string) bool {
+	countries := strings.Split(constants.SPECIFIC_COUNTRIES, ",")
+	if tools.Find(countries, country) {
+		if strings.Contains(leagueName, constants.WOMEN) {
+			return true
+		} else {
+			return false
+		}
+	}
+
+	return true
 }
 
 func convertStringToFloat(data string) (float64, error) {
@@ -127,7 +143,6 @@ func convertStringToFloat(data string) (float64, error) {
 }
 
 func handleLiveEventOdds(event requester.EventWithOdds) (bool, int, error) {
-	//not tested:
 	if reflect.DeepEqual(event.ResultEventWithOdds.Odds, requester.Odds{}) {
 		return false, 0, errors.New("event.ResultEventWithOdds.Odds is empty")
 	}
