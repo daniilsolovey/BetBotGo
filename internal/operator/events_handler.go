@@ -65,23 +65,6 @@ func sortEventsByOdds(eventsWithOdds []requester.EventWithOdds) ([]requester.Eve
 	for _, event := range eventsWithOdds {
 		primaryOdds = event.ResultEventWithOdds.Odds.Odds91_1
 		if len(primaryOdds) != 0 {
-			// if primaryOdds[0].HomeOd == "-" {
-			// 	primaryOdds[0].HomeOd = "0000"
-			// }
-
-			// if primaryOdds[0].AwayOd == "-" {
-			// 	primaryOdds[0].AwayOd = "0000"
-			// }
-
-			// homeOdd, err = convertStringToFloat(primaryOdds[0].HomeOd)
-			// if err != nil {
-			// 	return nil, err
-			// }
-
-			// awayOdd, err = convertStringToFloat(primaryOdds[0].AwayOd)
-			// if err != nil {
-			// 	return nil, err
-			// }
 			if primaryOdds[0].HomeOd == "-" || primaryOdds[0].AwayOd == "-" {
 				continue
 			}
@@ -114,6 +97,20 @@ func sortEventsByOdds(eventsWithOdds []requester.EventWithOdds) ([]requester.Eve
 	}
 
 	return result, nil
+}
+
+func handleEventsByLeagues(events []requester.EventWithOdds) []requester.EventWithOdds {
+	countries := strings.Split(constants.COUNTRIES, ",")
+	var result []requester.EventWithOdds
+	for _, event := range events {
+		for _, country := range countries {
+			if strings.Contains(event.League.Name, country) {
+				result = append(result, event)
+			}
+		}
+	}
+
+	return result
 }
 
 func convertStringToFloat(data string) (float64, error) {

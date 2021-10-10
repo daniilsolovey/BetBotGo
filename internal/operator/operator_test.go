@@ -3,10 +3,13 @@ package operator
 import (
 	"encoding/json"
 	"io/ioutil"
+	"sort"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/alecthomas/assert"
+	"github.com/daniilsolovey/BetBotGo/internal/constants"
 	"github.com/daniilsolovey/BetBotGo/internal/requester"
 	"github.com/daniilsolovey/BetBotGo/internal/tools"
 	"github.com/reconquest/karma-go"
@@ -456,4 +459,59 @@ func TestOperator_sortEventsByOdds_MissEvent(
 	result, err = sortEventsByOdds(events)
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
+}
+
+func TestOperator_sortEventsByLeagues_ReturnExpectedListWithCountries(
+	t *testing.T,
+) {
+	countries := strings.Split(constants.COUNTRIES, ",")
+	sort.Strings(countries)
+
+	testName1 := "Match Italy"
+	event1 := requester.EventWithOdds{
+		EventID: "1111",
+	}
+	event1.League.Name = testName1
+
+	testName2 := "League Russia"
+	event2 := requester.EventWithOdds{
+		EventID: "2222",
+	}
+	event2.League.Name = testName2
+
+	testName3 := "League Kazakhstan"
+	event3 := requester.EventWithOdds{
+		EventID: "3333",
+	}
+	event3.League.Name = testName3
+
+	var events []requester.EventWithOdds
+	events = append(events, event1, event2, event3)
+	sortedEventsByLeagues := handleEventsByLeagues(events)
+	assert.NotEmpty(t, sortedEventsByLeagues)
+
+	var testResult []string
+	for _, event := range sortedEventsByLeagues {
+		for _, country := range countries {
+			if strings.Contains(event.League.Name, country) {
+				testResult = append(testResult, event.League.Name)
+			}
+		}
+	}
+
+	if !tools.Find(testResult, testName1) {
+		assert.Fail(t, "should contain this country: %s", testName1)
+	}
+
+	if !tools.Find(testResult, testName2) {
+		assert.Fail(t, "should contain this country: %s", testName2)
+	}
+
+	log.Warning(" tools.Find(testResult, testName3) ", tools.Find(testResult, testName3))
+	log.Warning("testResult ", testResult)
+	if tools.Find(testResult, testName3) {
+		log.Warning("found ")
+		assert.Fail(t, "should not contain this country: %s", testName3)
+	}
+
 }
