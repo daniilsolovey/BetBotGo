@@ -5,6 +5,9 @@ VERSION = $(shell printf "%s.%s" \
 	$$(git rev-parse --short HEAD) \
 )
 
+# could be "..."
+TARGET = ...
+
 GOFLAGS = CGO_ENABLED=0
 
 version:

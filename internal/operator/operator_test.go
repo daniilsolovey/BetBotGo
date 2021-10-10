@@ -101,8 +101,11 @@ func (testRequester *TestRequester) GetEventOddsByEventIDs(events *requester.Upc
 	}
 
 	event1.EventStartTime = events.Results[0].HumanTime
+	event1.League.Name = constants.COUNTRIES
 	event2.EventStartTime = events.Results[1].HumanTime
+	event2.League.Name = constants.COUNTRIES
 	event3.EventStartTime = events.Results[2].HumanTime
+	event3.League.Name = constants.COUNTRIES
 	event1.EventID = events.Results[0].ID
 	event2.EventID = events.Results[1].ID
 	event3.EventID = events.Results[2].ID
@@ -467,7 +470,7 @@ func TestOperator_sortEventsByLeagues_ReturnExpectedListWithCountries(
 	countries := strings.Split(constants.COUNTRIES, ",")
 	sort.Strings(countries)
 
-	testName1 := "Match Italy"
+	testName1 := "Match Italy Men"
 	event1 := requester.EventWithOdds{
 		EventID: "1111",
 	}
