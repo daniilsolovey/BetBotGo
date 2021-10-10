@@ -5,10 +5,7 @@ VERSION = $(shell printf "%s.%s" \
 	$$(git rev-parse --short HEAD) \
 )
 
-# could be "..."
-TARGET = ...
-
-GOFLAGS = GO111MODULE=on CGO_ENABLED=0
+GOFLAGS = CGO_ENABLED=0
 
 version:
 	@echo $(VERSION)
@@ -22,7 +19,6 @@ get:
 build:
 	$(GOFLAGS) go build \
 		 -ldflags="-s -w -X main.version=$(VERSION)" \
-		 -gcflags="-trimpath=$(GOPATH)" \
-		 ./$(TARGET)
+		 -gcflags="-trimpath=$(GOPATH)"
 
 all: build

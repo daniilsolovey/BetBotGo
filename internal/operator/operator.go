@@ -129,7 +129,7 @@ func (operator *Operator) GetEvents() ([]requester.EventWithOdds, error) {
 		)
 	}
 
-	return sortedEventsWithOdds, nil
+	return handleEventsByLeagues(sortedEventsWithOdds), nil
 }
 
 func (operator *Operator) SendMessageAboutWinnerToTelegram(event requester.EventWithOdds) error {
