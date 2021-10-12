@@ -319,7 +319,6 @@ func (database *Database) GetLiveEventsResultsOnPreviousDate() ([]requester.Live
 			"unable to get current moscow time for receive events results on previous date",
 		)
 	}
-	log.Warning("timeNOw ", timeNow)
 	rows, err := database.client.Query(
 		context.Background(),
 		SQL_SELECT_LIVE_EVENTS_AT_END_OF_DAY,

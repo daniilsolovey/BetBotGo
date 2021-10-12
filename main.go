@@ -138,7 +138,6 @@ func main() {
 			waitUntill := beginOfDay.Add(24 * time.Hour)
 			waitingTime := waitUntill.Sub(timeNow)
 
-			log.Warning("waiting for statistic on previous day: ", waitingTime)
 			time.Sleep(waitingTime)
 			err = newStatistic.GetStatisticOnPreviousDayAndNotify()
 			if err != nil {

@@ -134,7 +134,6 @@ func (testRequester *TestRequester) GetLiveEventByID(eventID string) (*requester
 	}
 
 	for _, event := range events {
-		log.Warning("event.Id ", event.EventID)
 		if event.EventID == eventID {
 			return &event, nil
 		}
