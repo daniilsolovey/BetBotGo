@@ -56,7 +56,7 @@ func (handler *Handler) StartServer(config *config.Config) {
 	router.Use(JSONMiddleware())
 	router.GET("/upcoming_events", handler.UpcomingEvents)
 
-	router.Run("localhost:" + handler.config.Handler.Port)
+	router.Run(handler.config.Handler.Port)
 }
 
 func (handler *Handler) UpcomingEvents(context *gin.Context) {
