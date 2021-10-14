@@ -8,7 +8,9 @@ telegram:
 
 database:
     name: "bet_bot_go"
-    host: "localhost"
+    # host: "localhost"
+    # container name for host:
+    host: "betbot-postgres-db"
     port: "5432"
     user: "postgres"
     password: "admin"

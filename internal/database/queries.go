@@ -110,4 +110,8 @@ const (
 	SELECT * FROM statistic_on_previous_day
 	WHERE (created_at >= CAST($1 AS Date));
 	`
+	SQL_SELECT_UPCOMING_EVENTS_FOR_CURRENT_DAY = `
+	SELECT * FROM events_volleyball
+	WHERE (event_time >= CAST($1 AS Date)) ORDER BY event_time DESC;
+	`
 )

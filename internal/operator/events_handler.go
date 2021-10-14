@@ -65,23 +65,6 @@ func sortEventsByOdds(eventsWithOdds []requester.EventWithOdds) ([]requester.Eve
 	for _, event := range eventsWithOdds {
 		primaryOdds = event.ResultEventWithOdds.Odds.Odds91_1
 		if len(primaryOdds) != 0 {
-			// if primaryOdds[0].HomeOd == "-" {
-			// 	primaryOdds[0].HomeOd = "0000"
-			// }
-
-			// if primaryOdds[0].AwayOd == "-" {
-			// 	primaryOdds[0].AwayOd = "0000"
-			// }
-
-			// homeOdd, err = convertStringToFloat(primaryOdds[0].HomeOd)
-			// if err != nil {
-			// 	return nil, err
-			// }
-
-			// awayOdd, err = convertStringToFloat(primaryOdds[0].AwayOd)
-			// if err != nil {
-			// 	return nil, err
-			// }
 			if primaryOdds[0].HomeOd == "-" || primaryOdds[0].AwayOd == "-" {
 				continue
 			}
@@ -116,6 +99,36 @@ func sortEventsByOdds(eventsWithOdds []requester.EventWithOdds) ([]requester.Eve
 	return result, nil
 }
 
+func handleEventsByLeagues(events []requester.EventWithOdds) []requester.EventWithOdds {
+	countries := strings.Split(constants.COUNTRIES, ",")
+	var result []requester.EventWithOdds
+	for _, event := range events {
+		for _, country := range countries {
+			if strings.Contains(event.League.Name, country) {
+				if !isSpecificLeagueContainsWomen(event.League.Name, country) {
+					continue
+				}
+				result = append(result, event)
+			}
+		}
+	}
+
+	return result
+}
+
+func isSpecificLeagueContainsWomen(leagueName, country string) bool {
+	countries := strings.Split(constants.SPECIFIC_COUNTRIES, ",")
+	if tools.Find(countries, country) {
+		if strings.Contains(leagueName, constants.WOMEN) {
+			return true
+		} else {
+			return false
+		}
+	}
+
+	return true
+}
+
 func convertStringToFloat(data string) (float64, error) {
 	result, err := strconv.ParseFloat(data, 64)
 	if err != nil {
@@ -130,7 +143,6 @@ func convertStringToFloat(data string) (float64, error) {
 }
 
 func handleLiveEventOdds(event requester.EventWithOdds) (bool, int, error) {
-	//not tested:
 	if reflect.DeepEqual(event.ResultEventWithOdds.Odds, requester.Odds{}) {
 		return false, 0, errors.New("event.ResultEventWithOdds.Odds is empty")
 	}

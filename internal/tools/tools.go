@@ -1,6 +1,7 @@
 package tools
 
 import (
+	"sort"
 	"time"
 
 	"github.com/reconquest/karma-go"
@@ -31,4 +32,15 @@ func GetTimeMoscowLocation() (*time.Location, error) {
 	}
 
 	return moscowTime, nil
+}
+
+func Find(a []string, x string) bool {
+	sort.Strings(a)
+	for _, n := range a {
+		if x == n {
+			return true
+		}
+	}
+
+	return false
 }

@@ -319,7 +319,6 @@ func (database *Database) GetLiveEventsResultsOnPreviousDate() ([]requester.Live
 			"unable to get current moscow time for receive events results on previous date",
 		)
 	}
-	log.Warning("timeNOw ", timeNow)
 	rows, err := database.client.Query(
 		context.Background(),
 		SQL_SELECT_LIVE_EVENTS_AT_END_OF_DAY,
@@ -446,6 +445,69 @@ func (database *Database) GetStatisticOnPreviousWeek() ([]StatisticResultOfPrevi
 
 		results = append(results, result)
 	}
+
+	return results, nil
+}
+
+func (database *Database) GetUpcomingEventsForToday() ([]requester.EventWithOdds, error) {
+	log.Info("receiving upcoming events for today for viewing in handler")
+	timeNow, err := tools.GetCurrentMoscowTime()
+	if err != nil {
+		return nil, karma.Format(
+			err,
+			"unable to get current moscow time for receive upcoming_events_handler for today",
+		)
+	}
+
+	rows, err := database.client.Query(
+		context.Background(),
+		SQL_SELECT_UPCOMING_EVENTS_FOR_CURRENT_DAY,
+		"2021-10-10",
+	)
+
+	log.Warning("timeNOw ", timeNow)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+
+		return nil, karma.Format(
+			err,
+			"unable to get upcoming_events_handler for current day from the database",
+		)
+	}
+
+	defer func() {
+		rows.Close()
+	}()
+
+	var results []requester.EventWithOdds
+	for rows.Next() {
+		var (
+			event requester.EventWithOdds
+		)
+		err := rows.Scan(
+			&event.EventID,
+			&event.EventStartTime,
+			&event.League.ID,
+			&event.League.Name,
+			&event.Favorite,
+			&event.HomeCommandName,
+			&event.AwayCommandName,
+			&event.HomeOdd,
+			&event.AwayOdd,
+		)
+		if err != nil {
+			return nil, karma.Format(
+				err,
+				"error during scaning upcoming_events_handler for current day from database rows",
+			)
+		}
+
+		results = append(results, event)
+	}
+
+	log.Info("upcoming_events_handler successfully received")
 
 	return results, nil
 }

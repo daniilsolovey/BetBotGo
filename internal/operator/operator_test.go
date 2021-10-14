@@ -3,10 +3,13 @@ package operator
 import (
 	"encoding/json"
 	"io/ioutil"
+	"sort"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/alecthomas/assert"
+	"github.com/daniilsolovey/BetBotGo/internal/constants"
 	"github.com/daniilsolovey/BetBotGo/internal/requester"
 	"github.com/daniilsolovey/BetBotGo/internal/tools"
 	"github.com/reconquest/karma-go"
@@ -98,8 +101,11 @@ func (testRequester *TestRequester) GetEventOddsByEventIDs(events *requester.Upc
 	}
 
 	event1.EventStartTime = events.Results[0].HumanTime
+	event1.League.Name = constants.COUNTRIES
 	event2.EventStartTime = events.Results[1].HumanTime
+	event2.League.Name = constants.COUNTRIES
 	event3.EventStartTime = events.Results[2].HumanTime
+	event3.League.Name = constants.COUNTRIES
 	event1.EventID = events.Results[0].ID
 	event2.EventID = events.Results[1].ID
 	event3.EventID = events.Results[2].ID
@@ -128,7 +134,6 @@ func (testRequester *TestRequester) GetLiveEventByID(eventID string) (*requester
 	}
 
 	for _, event := range events {
-		log.Warning("event.Id ", event.EventID)
 		if event.EventID == eventID {
 			return &event, nil
 		}
@@ -456,4 +461,96 @@ func TestOperator_sortEventsByOdds_MissEvent(
 	result, err = sortEventsByOdds(events)
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
+}
+
+func TestOperator_sortEventsByLeagues_ReturnExpectedListWithCountries(
+	t *testing.T,
+) {
+	countries := strings.Split(constants.COUNTRIES, ",")
+	sort.Strings(countries)
+
+	testName1 := "Match Italy Men"
+	event1 := requester.EventWithOdds{
+		EventID: "1111",
+	}
+	event1.League.Name = testName1
+
+	testName2 := "League Russia"
+	event2 := requester.EventWithOdds{
+		EventID: "2222",
+	}
+	event2.League.Name = testName2
+
+	testName3 := "League Kazakhstan"
+	event3 := requester.EventWithOdds{
+		EventID: "3333",
+	}
+	event3.League.Name = testName3
+
+	testName4 := "League Ukraine Women"
+	event4 := requester.EventWithOdds{
+		EventID: "4444",
+	}
+	event4.League.Name = testName4
+
+	testName5 := "League Ukraine Men"
+	event5 := requester.EventWithOdds{
+		EventID: "5555",
+	}
+	event5.League.Name = testName5
+
+	testName6 := "Spain Women"
+	event6 := requester.EventWithOdds{
+		EventID: "6666",
+	}
+	event6.League.Name = testName6
+
+	testName7 := "Spain"
+	event7 := requester.EventWithOdds{
+		EventID: "7777",
+	}
+	event7.League.Name = testName7
+
+	var events []requester.EventWithOdds
+	events = append(events, event1, event2, event3, event4, event5, event6, event7)
+	sortedEventsByLeagues := handleEventsByLeagues(events)
+	assert.NotEmpty(t, sortedEventsByLeagues)
+
+	var testResult []string
+	for _, event := range sortedEventsByLeagues {
+		for _, country := range countries {
+			if strings.Contains(event.League.Name, country) {
+				testResult = append(testResult, event.League.Name)
+			}
+		}
+	}
+
+	if !tools.Find(testResult, testName1) {
+		assert.Fail(t, "should contain this country:", testName1)
+	}
+
+	if !tools.Find(testResult, testName2) {
+		assert.Fail(t, "should contain this country:", testName2)
+	}
+
+	if tools.Find(testResult, testName3) {
+		assert.Fail(t, "should not contain this country:", testName3)
+	}
+
+	if !tools.Find(testResult, testName4) {
+		assert.Fail(t, "should contain this country:", testName4)
+	}
+
+	if tools.Find(testResult, testName5) {
+		assert.Fail(t, "should not contain this country: ", testName5)
+	}
+
+	if !tools.Find(testResult, testName6) {
+		assert.Fail(t, "should contain this country:", testName6)
+	}
+
+	if tools.Find(testResult, testName7) {
+		assert.Fail(t, "should not contain this country: ", testName7)
+	}
+
 }

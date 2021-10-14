@@ -23,10 +23,16 @@ type BetApi struct {
 	BaseUrlGetEventOddsById string `yaml:"base_url_get_event_odds_by_id" required:"true"`
 }
 
+type Handler struct {
+	ApiVersion string `yaml:"api_version" required:"true"`
+	Port       string `yaml:"port" required:"true"`
+}
+
 type Config struct {
 	Database Database `yaml:"database" required:"true"`
 	Telegram Telegram `yaml:"telegram" required:"true"`
 	BetApi   BetApi   `yaml:"bet_api" required:"true"`
+	Handler  Handler  `yaml:"handler" required:"true"`
 }
 
 func Load(path string) (*Config, error) {
