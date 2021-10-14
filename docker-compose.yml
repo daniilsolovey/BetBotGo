@@ -3,13 +3,11 @@ services:
     bet-bot-go-app:
         image: bet-bot-go-app:latest
         container_name: bet-bot-go-app
-        # restart: always
+        restart: always
         ports:
           - 127.0.0.1:8080:8080
         external_links:
           - betbot-postgres-db
-        # environment:
-        #   - POSTGRES_PASSWORD=admin
         networks:
           - betbotgo
 
