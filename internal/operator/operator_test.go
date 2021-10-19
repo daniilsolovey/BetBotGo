@@ -537,20 +537,20 @@ func TestOperator_sortEventsByLeagues_ReturnExpectedListWithCountries(
 		assert.Fail(t, "should not contain this country:", testName3)
 	}
 
-	if !tools.Find(testResult, testName4) {
-		assert.Fail(t, "should contain this country:", testName4)
+	if tools.Find(testResult, testName4) {
+		assert.Fail(t, "should not contain this country:", testName4)
 	}
 
-	if tools.Find(testResult, testName5) {
-		assert.Fail(t, "should not contain this country: ", testName5)
+	if !tools.Find(testResult, testName5) {
+		assert.Fail(t, "should contain this country: ", testName5)
 	}
 
-	if !tools.Find(testResult, testName6) {
-		assert.Fail(t, "should contain this country:", testName6)
+	if tools.Find(testResult, testName6) {
+		assert.Fail(t, "should not contain this country:", testName6)
 	}
 
-	if tools.Find(testResult, testName7) {
-		assert.Fail(t, "should not contain this country: ", testName7)
+	if !tools.Find(testResult, testName7) {
+		assert.Fail(t, "should contain this country: ", testName7)
 	}
 
 }

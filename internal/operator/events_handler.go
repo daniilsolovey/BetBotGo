@@ -105,7 +105,7 @@ func handleEventsByLeagues(events []requester.EventWithOdds) []requester.EventWi
 	for _, event := range events {
 		for _, country := range countries {
 			if strings.Contains(event.League.Name, country) {
-				if !isSpecificLeagueContainsWomen(event.League.Name, country) {
+				if isSpecificLeagueContainsWomen(event.League.Name, country) {
 					continue
 				}
 				result = append(result, event)
@@ -126,7 +126,7 @@ func isSpecificLeagueContainsWomen(leagueName, country string) bool {
 		}
 	}
 
-	return true
+	return false
 }
 
 func convertStringToFloat(data string) (float64, error) {
