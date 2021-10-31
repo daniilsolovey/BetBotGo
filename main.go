@@ -23,7 +23,7 @@ var version = "[manual build]"
 
 var usage = `BetBotGo
 
-Download ticks and save them to the database.
+Receive upcoming events by secret strategy, save to database, handle data, send signal and statistic to telegram.
 
 Usage:
   BetBotGo [options]
