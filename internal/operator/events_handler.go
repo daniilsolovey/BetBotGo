@@ -100,12 +100,30 @@ func sortEventsByOdds(eventsWithOdds []requester.EventWithOdds) ([]requester.Eve
 }
 
 func handleEventsByLeagues(events []requester.EventWithOdds) []requester.EventWithOdds {
+	leagues := strings.Split(constants.LEAGUES, ",")
+	var result []requester.EventWithOdds
+	for _, event := range events {
+		for _, league := range leagues {
+			if strings.Contains(event.League.Name, league) {
+				if isSpecificLeagueContainsWomen(event.League.Name, league) {
+					continue
+				}
+
+				result = append(result, event)
+			}
+		}
+	}
+
+	return result
+}
+
+func handleEventsByCountries(events []requester.EventWithOdds) []requester.EventWithOdds {
 	countries := strings.Split(constants.COUNTRIES, ",")
 	var result []requester.EventWithOdds
 	for _, event := range events {
 		for _, country := range countries {
 			if strings.Contains(event.League.Name, country) {
-				if isSpecificLeagueContainsWomen(event.League.Name, country) {
+				if isSpecificCountryContainsWomen(event.League.Name, country) {
 					continue
 				}
 				result = append(result, event)
@@ -116,7 +134,20 @@ func handleEventsByLeagues(events []requester.EventWithOdds) []requester.EventWi
 	return result
 }
 
-func isSpecificLeagueContainsWomen(leagueName, country string) bool {
+func isSpecificLeagueContainsWomen(leagueName, league string) bool {
+	leagues := strings.Split(constants.SPECIFIC_LEAGUES, ",")
+	if tools.Find(leagues, league) {
+		if strings.Contains(leagueName, constants.WOMEN) {
+			return true
+		} else {
+			return false
+		}
+	}
+
+	return false
+}
+
+func isSpecificCountryContainsWomen(leagueName, country string) bool {
 	countries := strings.Split(constants.SPECIFIC_COUNTRIES, ",")
 	if tools.Find(countries, country) {
 		if strings.Contains(leagueName, constants.WOMEN) {

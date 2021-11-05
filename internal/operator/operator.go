@@ -88,6 +88,9 @@ func (operator *Operator) IsAllEventsCacheContainsEvent(eventID string) bool {
 
 	return false
 }
+func (operator *Operator) HandleEventsByLeagues(events []requester.EventWithOdds) []requester.EventWithOdds {
+	return handleEventsByLeagues(events)
+}
 
 func (operator *Operator) GetEvents() ([]requester.EventWithOdds, error) {
 	log.Info("receiving events for today")
@@ -129,7 +132,7 @@ func (operator *Operator) GetEvents() ([]requester.EventWithOdds, error) {
 		)
 	}
 
-	return handleEventsByLeagues(sortedEventsWithOdds), nil
+	return handleEventsByCountries(sortedEventsWithOdds), nil
 }
 
 func (operator *Operator) SendMessageAboutWinnerToTelegram(event requester.EventWithOdds) error {

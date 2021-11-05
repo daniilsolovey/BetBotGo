@@ -110,12 +110,14 @@ func main() {
 				log.Error(err)
 			}
 
-			err = database.InsertEventsForToday(events)
+			handledEvents := newOperator.HandleEventsByLeagues(events)
+
+			err = database.InsertEventsForToday(handledEvents)
 			if err != nil {
 				log.Error(err)
 			}
 
-			err = newOperator.CreateRoutinesForHandleLiveEvents(events)
+			err = newOperator.CreateRoutinesForHandleLiveEvents(handledEvents)
 			if err != nil {
 				log.Error(err)
 			}
