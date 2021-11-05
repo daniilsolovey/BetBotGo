@@ -462,7 +462,7 @@ func (database *Database) GetUpcomingEventsForToday() ([]requester.EventWithOdds
 	rows, err := database.client.Query(
 		context.Background(),
 		SQL_SELECT_UPCOMING_EVENTS_FOR_CURRENT_DAY,
-		"2021-10-10",
+		timeNow,
 	)
 
 	log.Warning("timeNOw ", timeNow)
