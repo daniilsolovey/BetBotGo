@@ -23,7 +23,7 @@ var version = "[manual build]"
 
 var usage = `BetBotGo
 
-Download ticks and save them to the database.
+Receive upcoming events by secret strategy, save to database, handle data, send signal and statistic to telegram.
 
 Usage:
   BetBotGo [options]
@@ -110,12 +110,14 @@ func main() {
 				log.Error(err)
 			}
 
-			err = database.InsertEventsForToday(events)
+			handledEvents := newOperator.HandleEventsByLeagues(events)
+
+			err = database.InsertEventsForToday(handledEvents)
 			if err != nil {
 				log.Error(err)
 			}
 
-			err = newOperator.CreateRoutinesForHandleLiveEvents(events)
+			err = newOperator.CreateRoutinesForHandleLiveEvents(handledEvents)
 			if err != nil {
 				log.Error(err)
 			}

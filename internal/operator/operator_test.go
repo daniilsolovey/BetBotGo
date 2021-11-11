@@ -463,7 +463,7 @@ func TestOperator_sortEventsByOdds_MissEvent(
 	assert.NotNil(t, result)
 }
 
-func TestOperator_sortEventsByLeagues_ReturnExpectedListWithCountries(
+func TestOperator_sortEventsByCountries_ReturnExpectedListWithCountries(
 	t *testing.T,
 ) {
 	countries := strings.Split(constants.COUNTRIES, ",")
@@ -513,7 +513,7 @@ func TestOperator_sortEventsByLeagues_ReturnExpectedListWithCountries(
 
 	var events []requester.EventWithOdds
 	events = append(events, event1, event2, event3, event4, event5, event6, event7)
-	sortedEventsByLeagues := handleEventsByLeagues(events)
+	sortedEventsByLeagues := handleEventsByCountries(events)
 	assert.NotEmpty(t, sortedEventsByLeagues)
 
 	var testResult []string
@@ -537,12 +537,116 @@ func TestOperator_sortEventsByLeagues_ReturnExpectedListWithCountries(
 		assert.Fail(t, "should not contain this country:", testName3)
 	}
 
+	if tools.Find(testResult, testName4) {
+		assert.Fail(t, "should not contain this country:", testName4)
+	}
+
+	if !tools.Find(testResult, testName5) {
+		assert.Fail(t, "should contain this country: ", testName5)
+	}
+
+	if tools.Find(testResult, testName6) {
+		assert.Fail(t, "should not contain this country:", testName6)
+	}
+
+	if !tools.Find(testResult, testName7) {
+		assert.Fail(t, "should contain this country: ", testName7)
+	}
+
+}
+
+func TestOperator_sortEventsByLeagues_ReturnExpectedListWithCountries(
+	t *testing.T,
+) {
+	leagues := strings.Split(constants.LEAGUES, ",")
+	sort.Strings(leagues)
+
+	testName1 := "Italy Cup Men"
+	event1 := requester.EventWithOdds{
+		EventID: "1111",
+	}
+	event1.League.Name = testName1
+
+	testName2 := "Russia Super League Men"
+	event2 := requester.EventWithOdds{
+		EventID: "2222",
+	}
+	event2.League.Name = testName2
+
+	testName3 := "League Kazakhstan"
+	event3 := requester.EventWithOdds{
+		EventID: "3333",
+	}
+	event3.League.Name = testName3
+
+	testName4 := "France Pro A"
+	event4 := requester.EventWithOdds{
+		EventID: "4444",
+	}
+	event4.League.Name = testName4
+
+	testName5 := "Turkey Cup"
+	event5 := requester.EventWithOdds{
+		EventID: "5555",
+	}
+	event5.League.Name = testName5
+
+	testName6 := "Russia Cup"
+	event6 := requester.EventWithOdds{
+		EventID: "6666",
+	}
+	event6.League.Name = testName6
+
+	testName7 := "Russia Cup Women"
+	event7 := requester.EventWithOdds{
+		EventID: "7777",
+	}
+	event7.League.Name = testName7
+
+	testName8 := "Turkey Efeler League Men"
+	event8 := requester.EventWithOdds{
+		EventID: "8888",
+	}
+	event8.League.Name = testName8
+
+	testName9 := "Turkey Efeler League Women"
+	event9 := requester.EventWithOdds{
+		EventID: "9999",
+	}
+	event9.League.Name = testName9
+
+	var events []requester.EventWithOdds
+	events = append(events, event1, event2, event3, event4, event5, event6, event7, event8, event9)
+	sortedEventsByLeagues := handleEventsByLeagues(events)
+	assert.NotEmpty(t, sortedEventsByLeagues)
+
+	var testResult []string
+	for _, event := range sortedEventsByLeagues {
+		for _, country := range leagues {
+			if strings.Contains(event.League.Name, country) {
+				testResult = append(testResult, event.League.Name)
+			}
+		}
+	}
+
+	if !tools.Find(testResult, testName1) {
+		assert.Fail(t, "should contain this country:", testName1)
+	}
+
+	if !tools.Find(testResult, testName2) {
+		assert.Fail(t, "should contain this country:", testName2)
+	}
+
+	if tools.Find(testResult, testName3) {
+		assert.Fail(t, "should not contain this country:", testName3)
+	}
+
 	if !tools.Find(testResult, testName4) {
 		assert.Fail(t, "should contain this country:", testName4)
 	}
 
-	if tools.Find(testResult, testName5) {
-		assert.Fail(t, "should not contain this country: ", testName5)
+	if !tools.Find(testResult, testName5) {
+		assert.Fail(t, "should contain this country: ", testName5)
 	}
 
 	if !tools.Find(testResult, testName6) {
@@ -553,4 +657,11 @@ func TestOperator_sortEventsByLeagues_ReturnExpectedListWithCountries(
 		assert.Fail(t, "should not contain this country: ", testName7)
 	}
 
+	if !tools.Find(testResult, testName8) {
+		assert.Fail(t, "should contain this country: ", testName8)
+	}
+
+	if tools.Find(testResult, testName9) {
+		assert.Fail(t, "should not contain this country: ", testName9)
+	}
 }
